@@ -1,0 +1,27 @@
+{
+  "name": "Public Blog",
+  "short_name": "Public Blog",
+  "description": "Thoughtful essays, stories, and commentary for curious readers.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAFAFA",
+  "theme_color": "#18181B",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "favicon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "favicon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["reading", "writing", "lifestyle"],
+  "lang": "en",
+  "dir": "ltr"
+}

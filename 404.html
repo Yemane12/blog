@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#FAFAFA" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#09090B" media="(prefers-color-scheme: dark)">
+  <title>Page Not Found — Public Blog</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Libre+Bodoni:wght@400;500;600;700&family=Public+Sans:wght@300;400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Bodoni:wght@400;500;600;700&family=Public+Sans:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Bodoni:wght@400;500;600;700&family=Public+Sans:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+</head>
+<body>
+  <header class="header" role="banner">
+    <div class="header__inner">
+      <a href="index.html" class="header__brand" aria-label="Public Blog — Home">
+        Public Blog
+      </a>
+      <nav class="header__nav" role="navigation" aria-label="Main navigation">
+        <a href="index.html" class="header__nav-link">Read</a>
+        <a href="archive.html" class="header__nav-link">Archive</a>
+        <a href="about.html" class="header__nav-link">About</a>
+        <a href="#subscribe" class="header__nav-link header__cta btn btn-secondary">Subscribe</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main" role="main" style="min-height: 60vh; display: flex; align-items: center; justify-content: center; text-align: center;">
+    <div class="container">
+      <div class="animate-fade-in-up" style="max-width: 400px; margin: 0 auto;">
+        <h1 style="font-size: var(--text-5xl); margin-bottom: var(--space-md); line-height: 1;">404</h1>
+        <h2 class="article__title" style="font-size: var(--text-2xl); margin-bottom: var(--space-lg);">Page Not Found</h2>
+        <p style="font-size: var(--text-lg); color: var(--color-muted-foreground); margin-bottom: var(--space-2xl);">The page you're looking for doesn't exist or has been moved.</p>
+        <div style="display: flex; flex-direction: column; gap: var(--space-md); align-items: center;">
+          <a href="index.html" class="btn btn-primary" style="width: 100%; max-width: 280px;">Back to Home</a>
+          <a href="archive.html" class="btn btn-secondary" style="width: 100%; max-width: 280px;">Browse Archive</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <div class="footer__inner">
+      <div class="footer__grid">
+        <div>
+          <p class="footer__brand">Public Blog</p>
+          <p class="footer__tagline">Thoughtful essays, stories, and commentary.</p>
+        </div>
+        <nav aria-label="Explore">
+          <h3 class="footer__column-heading">Explore</h3>
+          <ul class="footer__links">
+            <li><a href="index.html" class="footer__link">Latest</a></li>
+            <li><a href="archive.html" class="footer__link">All Articles</a></li>
+            <li><a href="about.html" class="footer__link">About</a></li>
+          </ul>
+        </nav>
+        <nav aria-label="Connect">
+          <h3 class="footer__column-heading">Connect</h3>
+          <ul class="footer__links">
+            <li><a href="https://twitter.com" class="footer__link" target="_blank" rel="noopener">Twitter</a></li>
+            <li><a href="https://github.com" class="footer__link" target="_blank" rel="noopener">GitHub</a></li>
+            <li><a href="mailto:hello@publicblog.example" class="footer__link">Email</a></li>
+          </ul>
+        </nav>
+        <nav aria-label="Legal">
+          <h3 class="footer__column-heading">Legal</h3>
+          <ul class="footer__links">
+            <li><a href="privacy.html" class="footer__link">Privacy</a></li>
+            <li><a href="terms.html" class="footer__link">Terms</a></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="footer__bottom">
+        <p class="footer__copyright">&copy; 2026 Public Blog. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js" defer></script>
+</body>
+</html>

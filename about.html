@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="About Public Blog — A personal blog for thoughtful essays, stories, and commentary.">
+  <meta name="theme-color" content="#FAFAFA" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#09090B" media="(prefers-color-scheme: dark)">
+  <title>About — Public Blog</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Libre+Bodoni:wght@400;500;600;700&family=Public+Sans:wght@300;400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Bodoni:wght@400;500;600;700&family=Public+Sans:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Bodoni:wght@400;500;600;700&family=Public+Sans:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="alternate" type="application/rss+xml" title="Public Blog RSS Feed" href="feed.xml">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="assets/manifest.json">
+</head>
+<body>
+  <header class="header" role="banner">
+    <div class="header__inner">
+      <a href="index.html" class="header__brand" aria-label="Public Blog — Home">
+        Public Blog
+      </a>
+      <nav class="header__nav" role="navigation" aria-label="Main navigation">
+        <a href="index.html" class="header__nav-link">Read</a>
+        <a href="archive.html" class="header__nav-link">Archive</a>
+        <a href="about.html" class="header__nav-link" aria-current="page">About</a>
+        <a href="#subscribe" class="header__nav-link header__cta btn btn-secondary">Subscribe</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main" role="main">
+    <article class="article">
+      <header class="article__header">
+        <h1 class="article__title">About This Blog</h1>
+        <p class="article__dek">Who writes this, why it exists, and what you'll find here.</p>
+      </header>
+
+      <div class="article__content">
+        <h2>The Writer</h2>
+        <p>Hi, I'm Alex Chen. I write about attention, craft, technology, and the quiet art of doing meaningful work in a noisy world.</p>
+        <p>By day, I build software. By night, I read too many books and write essays that start as notes to myself.</p>
+
+        <h2>Why This Exists</h2>
+        <p>I started this blog because I wanted a place that respects the reader. No pop-ups, no tracking, no algorithmic feed, no engagement bait. Just writing that earns your time.</p>
+        <p>The internet is full of content. It's not full of craft.</p>
+
+        <h2>What You'll Find</h2>
+        <ul>
+          <li><strong>Essays</strong> — Long-form pieces on attention, creativity, technology, culture.</li>
+          <li><strong>Reading notes</strong> — What I'm learning from books worth re-reading.</li>
+          <li><strong>Occasional experiments</strong> — Small projects, tools, or ideas I'm playing with.</li>
+        </ul>
+
+        <h2>The Newsletter</h2>
+        <p>The best writing goes to email subscribers first. No spam, no tracking, no growth hacks. Just the next essay when it's ready.</p>
+        <p><a href="#subscribe" class="btn btn-primary">Subscribe</a></p>
+
+        <h2>Principles</h2>
+        <ol>
+          <li><strong>Writing first.</strong> Every design decision serves the reading experience.</li>
+          <li><strong>Respect the reader.</strong> No dark patterns, no tracking, no forced interactions.</li>
+          <li><strong>Own the relationship.</strong> Email is the only channel I control.</li>
+          <li><strong>Static by default.</strong> Zero dependencies, zero build, zero surprises.</li>
+          <li><strong>Craft shows.</strong> Small details signal quality before a word is read.</li>
+        </ol>
+
+        <h2>Technical Notes</h2>
+        <p>This blog is hand-coded static HTML/CSS/JS. No framework, no build step, no database. It deploys with a git push.</p>
+        <p>Fonts: <a href="https://fonts.google.com/specimen/Libre+Bodoni">Libre Bodoni</a> (headings) + <a href="https://fonts.google.com/specimen/Public+Sans">Public Sans</a> (body), self-hosted in production.</p>
+        <p>Icons: <a href="https://lucide.dev">Lucide</a> (SVG, inline).</p>
+        <p>Analytics: <a href="https://plausible.io">Plausible</a> (privacy-friendly, optional).</p>
+
+        <h2>Contact</h2>
+        <p>Email: <a href="mailto:hello@publicblog.example">hello@publicblog.example</a></p>
+        <p>Twitter: <a href="https://twitter.com" target="_blank" rel="noopener">@publicblog</a></p>
+        <p>GitHub: <a href="https://github.com" target="_blank" rel="noopener">github.com/publicblog</a></p>
+      </div>
+    </article>
+
+    <section class="newsletter" id="subscribe" aria-labelledby="newsletter-heading">
+      <div class="container">
+        <h2 id="newsletter-heading" class="newsletter__headline">Get the next one in your inbox</h2>
+        <p class="newsletter__description">No spam. No tracking. Just the next essay, delivered when it's ready. Unsubscribe anytime.</p>
+        <form class="newsletter__form" id="newsletter-form" novalidate>
+          <div class="form-group">
+            <label for="email" class="label sr-only">Email address</label>
+            <input type="email" id="email" name="email" class="input newsletter__input" placeholder="your@email.com" required autocomplete="email" aria-describedby="email-error email-success">
+            <p id="email-error" class="form-error" aria-live="polite" hidden></p>
+            <p id="email-success" class="form-success" aria-live="polite" hidden></p>
+          </div>
+          <button type="submit" class="btn btn-primary newsletter__btn">Subscribe</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <div class="footer__inner">
+      <div class="footer__grid">
+        <div>
+          <p class="footer__brand">Public Blog</p>
+          <p class="footer__tagline">Thoughtful essays, stories, and commentary. Written for readers who value depth over speed.</p>
+        </div>
+        <nav aria-label="Explore">
+          <h3 class="footer__column-heading">Explore</h3>
+          <ul class="footer__links">
+            <li><a href="index.html" class="footer__link">Latest</a></li>
+            <li><a href="archive.html" class="footer__link">All Articles</a></li>
+            <li><a href="tags.html" class="footer__link">Topics</a></li>
+            <li><a href="about.html" class="footer__link">About</a></li>
+            <li><a href="feed.xml" class="footer__link">RSS Feed</a></li>
+          </ul>
+        </nav>
+        <nav aria-label="Connect">
+          <h3 class="footer__column-heading">Connect</h3>
+          <ul class="footer__links">
+            <li><a href="#subscribe" class="footer__link">Newsletter</a></li>
+            <li><a href="https://twitter.com" class="footer__link" target="_blank" rel="noopener">Twitter</a></li>
+            <li><a href="https://github.com" class="footer__link" target="_blank" rel="noopener">GitHub</a></li>
+            <li><a href="mailto:hello@publicblog.example" class="footer__link">Email</a></li>
+          </ul>
+        </nav>
+        <nav aria-label="Legal">
+          <h3 class="footer__column-heading">Legal</h3>
+          <ul class="footer__links">
+            <li><a href="privacy.html" class="footer__link">Privacy</a></li>
+            <li><a href="terms.html" class="footer__link">Terms</a></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="footer__bottom">
+        <p class="footer__copyright">&copy; 2026 Public Blog. All rights reserved.</p>
+        <div class="footer__social">
+          <a href="https://twitter.com" class="footer__social-link" aria-label="Twitter" target="_blank" rel="noopener">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg>
+          </a>
+          <a href="https://github.com" class="footer__social-link" aria-label="GitHub" target="_blank" rel="noopener">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+          </a>
+          <a href="feed.xml" class="footer__social-link" aria-label="RSS Feed">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js" defer></script>
+</body>
+</html>
