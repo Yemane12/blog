@@ -1,15 +1,11 @@
-import { getSupabase } from './_lib/supabase.js';
 import { toHtml, estimateReadMinutes, slugify } from './_lib/markdown.js';
-import { getAdminToken, parseBody } from './_lib/auth.js';
+import { getRequestUser, parseBody, sendDbError } from './_lib/auth.js';
 
 /**
  * POST /api/publish
- * Create or update a post. Requires the admin token, which is verified inside
- * the database by the publish_post() function (the token is never trusted
- * client-side and never stored in the page).
- *
- * Auth: send the token as `Authorization: Bearer <token>`, an `x-admin-token`
- * header, or a `token` field in the JSON body.
+ * Create or update one of the signed-in author's posts. Requires a Supabase
+ * session (Authorization: Bearer <access_token>). Row Level Security enforces
+ * that only approved authors can publish and only to their own posts.
  *
  * Body (JSON):
  *   title        (required)
@@ -17,9 +13,9 @@ import { getAdminToken, parseBody } from './_lib/auth.js';
  *   content      raw HTML (used as-is)       /
  *   slug         optional (derived from title)
  *   dek, excerpt, category, author_name, author_bio   optional
- *   tags         optional: array or comma-separated string
+ *   tags         array or comma-separated string
  *   read_minutes optional (estimated if omitted)
- *   published_at optional ISO date/datetime
+ *   published_at optional ISO date
  *   is_published optional boolean (default true)
  */
 export default async function handler(req, res) {
@@ -28,9 +24,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const ctx = await getRequestUser(req);
+  if (!ctx) return res.status(401).json({ error: 'Please sign in.' });
+
   const body = parseBody(req);
-  const token = getAdminToken(req, body);
-  if (!token) return res.status(401).json({ error: 'Missing admin token.' });
 
   const title = (body.title || '').toString().trim();
   if (!title) return res.status(400).json({ error: 'A title is required.' });
@@ -61,36 +58,38 @@ export default async function handler(req, res) {
     if (!isNaN(d)) publishedAt = d.toISOString();
   }
 
+  const fallbackName = (ctx.user.user_metadata && ctx.user.user_metadata.display_name)
+    || (ctx.user.email ? ctx.user.email.split('@')[0] : 'Author');
+
+  const row = {
+    slug,
+    title,
+    dek: (body.dek || '').toString() || null,
+    excerpt: (body.excerpt || body.dek || '').toString() || null,
+    category: (body.category || 'Essay').toString(),
+    content,
+    read_minutes: readMinutes,
+    tags,
+    author_name: (body.author_name || fallbackName).toString(),
+    author_bio: (body.author_bio || '').toString(),
+    published_at: publishedAt,
+    is_published: body.is_published === false ? false : true,
+    author_id: ctx.user.id,
+  };
+
   try {
-    const supabase = getSupabase();
-    const { data, error } = await supabase.rpc('publish_post', {
-      p_token: token,
-      p_slug: slug,
-      p_title: title,
-      p_dek: (body.dek || '').toString() || null,
-      p_excerpt: (body.excerpt || body.dek || '').toString() || null,
-      p_category: (body.category || 'Essay').toString(),
-      p_content: content,
-      p_read_minutes: readMinutes,
-      p_tags: tags,
-      p_author_name: (body.author_name || 'Alex Chen').toString(),
-      p_author_bio: (body.author_bio || 'Writer, reader, occasional builder of things.').toString(),
-      p_published_at: publishedAt,
-      p_is_published: body.is_published === false ? false : true,
-    });
+    // Upsert on slug. RLS ensures the author owns the row (or is admin).
+    const { data, error } = await ctx.client
+      .from('posts')
+      .upsert(row, { onConflict: 'slug' })
+      .select('slug')
+      .single();
 
-    if (error) {
-      // 42501 = our "unauthorized" token check inside the DB function.
-      if (error.code === '42501' || /unauthorized/i.test(error.message || '')) {
-        return res.status(401).json({ error: 'Invalid admin token.' });
-      }
-      return res.status(400).json({ error: error.message || 'Publish failed.' });
-    }
-
+    if (error) return sendDbError(res, error);
     return res.status(200).json({
       ok: true,
-      slug: data,
-      url: `/articles/${data}`,
+      slug: data.slug,
+      url: `/articles/${data.slug}`,
       read_minutes: readMinutes,
     });
   } catch (err) {

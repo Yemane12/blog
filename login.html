@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#FAFAFA" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#09090B" media="(prefers-color-scheme: dark)">
+  <title>Sign in — Public Blog</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Bodoni:wght@400;500;600;700&family=Public+Sans:wght@300;400;500;600;700&display=swap">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+  <style>
+    .auth-card { max-width: 440px; margin: 0 auto; }
+    .auth-field { display: flex; flex-direction: column; gap: .4rem; margin-bottom: 1rem; }
+    .auth-field label { font-weight: 600; font-size: .85rem; }
+    .auth-tabs { display: flex; gap: .5rem; margin-bottom: 1.5rem; }
+    .auth-tabs button { flex: 1; }
+    .auth-status { margin-top: 1rem; padding: .8rem 1rem; border-radius: 8px; display: none; }
+    .auth-status.on { display: block; }
+    .auth-status.ok { background: color-mix(in srgb, var(--color-accent, #EC4899) 12%, transparent); }
+    .auth-status.err { background: color-mix(in srgb, #ef4444 16%, transparent); }
+    .muted { opacity: .7; font-size: .85rem; }
+    .signed-in-box { padding: 1.2rem; border-radius: 10px; background: color-mix(in srgb, currentColor 6%, transparent); }
+  </style>
+</head>
+<body>
+  <header class="header" role="banner">
+    <div class="header__inner">
+      <a href="/" class="header__brand" aria-label="Public Blog — Home">Public Blog</a>
+      <nav class="header__nav" role="navigation" aria-label="Main navigation">
+        <a href="/" class="header__nav-link">Read</a>
+        <a href="/archive.html" class="header__nav-link">Archive</a>
+        <a href="/about.html" class="header__nav-link">About</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main" role="main">
+    <div class="container auth-card">
+      <header class="page-header">
+        <div>
+          <h1 class="page-title">Sign in</h1>
+          <p class="page-description">Sign in to write and manage articles. New here? Create an account — an admin approves new authors before they can publish.</p>
+        </div>
+      </header>
+
+      <!-- Already signed in -->
+      <div id="signed-in" class="signed-in-box" style="display:none;">
+        <p id="signed-in-who" style="margin-top:0;"></p>
+        <div style="display:flex; gap:.6rem; flex-wrap:wrap;">
+          <a href="/admin.html" class="btn btn-primary">Go to dashboard</a>
+          <button type="button" class="btn btn-secondary" id="signout-btn">Sign out</button>
+        </div>
+      </div>
+
+      <!-- Auth forms -->
+      <div id="forms">
+        <div class="auth-tabs">
+          <button type="button" class="btn btn-secondary" id="tab-signin">Sign in</button>
+          <button type="button" class="btn btn-secondary" id="tab-signup">Create account</button>
+        </div>
+
+        <form id="signin-form" novalidate>
+          <div class="auth-field">
+            <label for="si-email">Email</label>
+            <input type="email" id="si-email" class="input" autocomplete="email" required>
+          </div>
+          <div class="auth-field">
+            <label for="si-password">Password</label>
+            <input type="password" id="si-password" class="input" autocomplete="current-password" required>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;">Sign in</button>
+        </form>
+
+        <form id="signup-form" novalidate style="display:none;">
+          <div class="auth-field">
+            <label for="su-name">Display name</label>
+            <input type="text" id="su-name" class="input" autocomplete="name" placeholder="How your byline appears">
+          </div>
+          <div class="auth-field">
+            <label for="su-email">Email</label>
+            <input type="email" id="su-email" class="input" autocomplete="email" required>
+          </div>
+          <div class="auth-field">
+            <label for="su-password">Password <span class="muted">— at least 6 characters</span></label>
+            <input type="password" id="su-password" class="input" autocomplete="new-password" required minlength="6">
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;">Create account</button>
+        </form>
+
+        <div id="status" class="auth-status" role="status" aria-live="polite"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <div class="footer__inner">
+      <div class="footer__bottom">
+        <p class="footer__copyright">&copy; 2026 Public Blog.</p>
+        <p><a href="/" class="footer__link">← Back to the blog</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    (function () {
+      var $ = function (id) { return document.getElementById(id); };
+      function show(kind, msg) {
+        var el = $('status');
+        el.className = 'auth-status on ' + kind;
+        el.textContent = msg;
+      }
+      function hideStatus() { $('status').className = 'auth-status'; }
+
+      // Tab switching
+      $('tab-signin').addEventListener('click', function () {
+        $('signin-form').style.display = ''; $('signup-form').style.display = 'none'; hideStatus();
+      });
+      $('tab-signup').addEventListener('click', function () {
+        $('signin-form').style.display = 'none'; $('signup-form').style.display = ''; hideStatus();
+      });
+
+      async function refresh() {
+        if (!window.blogAuth) return;
+        var session = await window.blogAuth.getSession();
+        if (session) {
+          $('forms').style.display = 'none';
+          $('signed-in').style.display = '';
+          var email = session.user && session.user.email ? session.user.email : 'your account';
+          $('signed-in-who').textContent = 'Signed in as ' + email + '.';
+        } else {
+          $('forms').style.display = '';
+          $('signed-in').style.display = 'none';
+        }
+      }
+
+      $('signin-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        show('ok', 'Signing in…');
+        var r = await window.blogAuth.signIn($('si-email').value.trim(), $('si-password').value);
+        if (r.error) { show('err', r.error.message); return; }
+        window.location.href = '/admin.html';
+      });
+
+      $('signup-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        show('ok', 'Creating your account…');
+        var r = await window.blogAuth.signUp($('su-email').value.trim(), $('su-password').value, $('su-name').value.trim());
+        if (r.error) { show('err', r.error.message); return; }
+        if (r.data && r.data.session) {
+          window.location.href = '/admin.html';
+        } else {
+          show('ok', 'Account created! Check your email to confirm, then sign in. A site admin will approve you as an author before you can publish.');
+        }
+      });
+
+      $('signout-btn').addEventListener('click', async function () {
+        await window.blogAuth.signOut();
+        refresh();
+      });
+
+      refresh();
+    })();
+  </script>
+</body>
+</html>
