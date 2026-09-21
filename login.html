@@ -151,13 +151,22 @@
       $('signup-form').addEventListener('submit', async function (e) {
         e.preventDefault();
         show('ok', 'Creating your account…');
-        var r = await window.blogAuth.signUp($('su-email').value.trim(), $('su-password').value, $('su-name').value.trim());
+        var email = $('su-email').value.trim();
+        var password = $('su-password').value;
+        var r = await window.blogAuth.signUp(email, password, $('su-name').value.trim());
         if (r.error) { show('err', r.error.message); return; }
         if (r.data && r.data.session) {
           window.location.href = '/admin.html';
-        } else {
-          show('ok', 'Account created! Check your email to confirm, then sign in. A site admin will approve you as an author before you can publish.');
+          return;
         }
+        // No session returned — the account is auto-confirmed server-side, so
+        // sign in immediately for a seamless experience.
+        var s = await window.blogAuth.signIn(email, password);
+        if (s.error) {
+          show('ok', 'Account created — please sign in with your new credentials.');
+          return;
+        }
+        window.location.href = '/admin.html';
       });
 
       $('signout-btn').addEventListener('click', async function () {
