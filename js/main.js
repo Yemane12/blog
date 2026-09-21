@@ -202,9 +202,9 @@
     }
 
     if (listContainer) {
-      const items = (leadContainer ? rest : posts)
-        .map(
-          (p) => `
+      const listPosts = leadContainer ? rest : posts;
+      const items = listPosts.map(
+        (p) => `
         <li>
           <a href="/articles/${encodeURIComponent(p.slug)}" class="article-list__item">
             ${p.cover_image ? `<img class="article-list__thumb" src="${escapeHtml(p.cover_image)}" alt="" loading="lazy">` : ''}
@@ -214,51 +214,59 @@
             </div>
           </a>
         </li>`
-        )
-        .join('');
-      listContainer.innerHTML = items;
+      );
+
+      // In-feed sponsors: place an ad between posts (after every 3rd).
+      const ads = await fetchAds();
+      if (ads.length) {
+        const withAds = [];
+        let adIdx = 0;
+        items.forEach((li, i) => {
+          withAds.push(li);
+          // After every 3rd post, drop in the next (unique) sponsor.
+          if ((i + 1) % 3 === 0 && i < items.length - 1 && adIdx < ads.length) {
+            withAds.push(infeedAdHtml(ads[adIdx++]));
+          }
+        });
+        listContainer.innerHTML = withAds.join('');
+      } else {
+        listContainer.innerHTML = items.join('');
+      }
     }
   }
 
-  async function initAdBoard() {
-    const board = $('#ad-board');
-    const grid = $('#ad-board-grid');
-    if (!board || !grid) return;
-
-    let ads;
+  async function fetchAds(placement = 'home') {
     try {
-      const res = await fetch('/api/ads?placement=home');
-      if (!res.ok) return;
+      const res = await fetch('/api/ads?placement=' + encodeURIComponent(placement));
+      if (!res.ok) return [];
       const data = await res.json();
-      ads = data.ads;
+      return Array.isArray(data.ads) ? data.ads : [];
     } catch (_) {
-      return;
+      return [];
     }
-    if (!Array.isArray(ads) || ads.length === 0) return;
+  }
 
-    grid.innerHTML = ads
-      .map((ad) => {
-        const href = ad.link_url ? escapeHtml(ad.link_url) : '#';
-        const img = ad.image_url
-          ? `<img class="ad-card__img" src="${escapeHtml(ad.image_url)}" alt="" loading="lazy">`
-          : '';
-        const body = ad.body ? `<p class="ad-card__text">${escapeHtml(ad.body)}</p>` : '';
-        let domain = '';
-        try { if (ad.link_url) domain = new URL(ad.link_url).hostname.replace(/^www\./, ''); } catch (_) {}
-        const cta = domain ? `<span class="ad-card__cta">${escapeHtml(domain)} &rarr;</span>` : '';
-        return `
-        <a class="ad-card" href="${href}" target="_blank" rel="noopener sponsored nofollow">
+  function infeedAdHtml(ad) {
+    const href = ad.link_url ? escapeHtml(ad.link_url) : '#';
+    const img = ad.image_url
+      ? `<img class="ad-card__img" src="${escapeHtml(ad.image_url)}" alt="" loading="lazy">`
+      : '';
+    const body = ad.body ? `<p class="ad-card__text">${escapeHtml(ad.body)}</p>` : '';
+    let domain = '';
+    try { if (ad.link_url) domain = new URL(ad.link_url).hostname.replace(/^www\./, ''); } catch (_) {}
+    const cta = domain ? `<span class="ad-card__cta">${escapeHtml(domain)} &rarr;</span>` : '';
+    return `
+      <li class="ad-infeed" aria-label="Sponsored">
+        <a class="ad-card ad-card--infeed" href="${href}" target="_blank" rel="noopener sponsored nofollow">
           ${img}
           <div class="ad-card__body">
-            <span class="ad-card__chip">Ad</span>
+            <span class="ad-card__chip">Sponsored</span>
             <p class="ad-card__title">${escapeHtml(ad.title)}</p>
             ${body}
             ${cta}
           </div>
-        </a>`;
-      })
-      .join('');
-    board.hidden = false;
+        </a>
+      </li>`;
   }
 
   async function initArchiveList() {
@@ -488,7 +496,6 @@
     initThemeToggle();
     initHomepageList();
     initArchiveList();
-    initAdBoard();
 
     // Log initialization for debugging
     console.log('[Public Blog] Initialized — Swiss Modernism 2.0');
