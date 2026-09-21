@@ -269,6 +269,42 @@
       </li>`;
   }
 
+  function renderArchive(container, posts) {
+    if (!posts.length) {
+      container.innerHTML = '<p class="hint" style="opacity:.7;">No articles match your search.</p>';
+      return;
+    }
+    const byYear = new Map();
+    for (const p of posts) {
+      const year = new Date(p.published_at).getUTCFullYear();
+      if (!byYear.has(year)) byYear.set(year, []);
+      byYear.get(year).push(p);
+    }
+    const years = [...byYear.keys()].sort((a, b) => b - a);
+    container.innerHTML = years
+      .map((year) => {
+        const rows = byYear
+          .get(year)
+          .map(
+            (p) => `
+          <li>
+            <a href="/articles/${encodeURIComponent(p.slug)}" class="article-list__item">
+              <time class="article-list__meta" datetime="${escapeHtml(p.published_at)}">${formatShort(p.published_at)}</time>
+              <h3 class="article-list__headline">${escapeHtml(p.title)}</h3>
+            </a>
+          </li>`
+          )
+          .join('');
+        return `
+      <section class="archive-year" aria-labelledby="year-${year}">
+        <h2 id="year-${year}" class="archive__year-heading">${year}</h2>
+        <ul class="article-list" role="list">${rows}
+        </ul>
+      </section>`;
+      })
+      .join('\n');
+  }
+
   async function initArchiveList() {
     const container = $('#dynamic-archive');
     if (!container) return;
@@ -284,37 +320,127 @@
     }
     if (!Array.isArray(posts) || posts.length === 0) return;
 
-    // Group by year, newest first.
-    const byYear = new Map();
-    for (const p of posts) {
-      const year = new Date(p.published_at).getUTCFullYear();
-      if (!byYear.has(year)) byYear.set(year, []);
-      byYear.get(year).push(p);
-    }
-    const years = [...byYear.keys()].sort((a, b) => b - a);
+    renderArchive(container, posts);
 
-    container.innerHTML = years
-      .map((year, i) => {
-        const rows = byYear
-          .get(year)
+    // Wire the search box (progressive enhancement).
+    const wrap = $('#archive-search-wrap');
+    const input = $('#archive-search');
+    const status = $('#archive-search-status');
+    if (wrap && input) {
+      wrap.hidden = false;
+      const matches = (p, q) => {
+        const hay = [p.title, p.dek, p.excerpt, (p.tags || []).join(' ')].join(' ').toLowerCase();
+        return hay.includes(q);
+      };
+      const run = () => {
+        const q = input.value.trim().toLowerCase();
+        const filtered = q ? posts.filter((p) => matches(p, q)) : posts;
+        renderArchive(container, filtered);
+        if (status) {
+          status.textContent = q
+            ? `${filtered.length} of ${posts.length} article(s) match “${input.value.trim()}”.`
+            : '';
+        }
+      };
+      input.addEventListener('input', debounce(run, 150));
+    }
+  }
+
+  // ============================================================
+  // TAGS PAGE (DB-driven cloud + per-tag lists)
+  // ============================================================
+
+  function tagSlug(t) {
+    return String(t).toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  }
+
+  async function initTagsPage() {
+    const container = $('#dynamic-tags');
+    if (!container) return;
+
+    let posts;
+    try {
+      const res = await fetch('/api/posts?limit=100');
+      if (!res.ok) return;
+      const data = await res.json();
+      posts = data.posts;
+    } catch (_) {
+      return;
+    }
+    if (!Array.isArray(posts) || posts.length === 0) return;
+
+    // Group posts by tag.
+    const byTag = new Map();
+    for (const p of posts) {
+      for (const t of p.tags || []) {
+        if (!byTag.has(t)) byTag.set(t, []);
+        byTag.get(t).push(p);
+      }
+    }
+    if (byTag.size === 0) { container.innerHTML = '<p class="hint">No topics yet.</p>'; return; }
+
+    // Sort tags by post count, then alphabetically.
+    const tags = [...byTag.keys()].sort((a, b) => byTag.get(b).length - byTag.get(a).length || a.localeCompare(b));
+
+    const cloud = tags
+      .map((t) => `<a href="#${tagSlug(t)}" class="article__tag" role="listitem">${escapeHtml(t)} (${byTag.get(t).length})</a>`)
+      .join('\n        ');
+
+    const sections = tags
+      .map((t) => {
+        const rows = byTag
+          .get(t)
           .map(
-            (p) => `
-          <li>
-            <a href="/articles/${encodeURIComponent(p.slug)}" class="article-list__item">
-              <time class="article-list__meta" datetime="${escapeHtml(p.published_at)}">${formatShort(p.published_at)}</time>
-              <h3 class="article-list__headline">${escapeHtml(p.title)}</h3>
-            </a>
-          </li>`
+            (p) => `<li><a href="/articles/${encodeURIComponent(p.slug)}" class="article-list__item"><time class="article-list__meta" datetime="${escapeHtml(p.published_at)}">${formatShort(p.published_at)}</time><h3 class="article-list__headline">${escapeHtml(p.title)}</h3></a></li>`
           )
-          .join('');
+          .join('\n          ');
         return `
-      <section class="archive-year animate-fade-in-up delay-${Math.min(i + 1, 5)}" aria-labelledby="year-${year}">
-        <h2 id="year-${year}" class="archive__year-heading">${year}</h2>
-        <ul class="article-list" role="list">${rows}
+      <section id="${tagSlug(t)}" class="tag-section" aria-labelledby="${tagSlug(t)}-heading">
+        <h2 id="${tagSlug(t)}-heading" class="tag-section__title">${escapeHtml(t)}</h2>
+        <ul class="article-list" role="list">
+          ${rows}
         </ul>
       </section>`;
       })
       .join('\n');
+
+    container.innerHTML =
+      `<div class="tags-cloud" role="list" aria-label="Article topics">\n        ${cloud}\n      </div>\n${sections}`;
+
+    // If the URL has a #tag, scroll to it now that content exists.
+    if (window.location.hash) {
+      const el = document.getElementById(window.location.hash.slice(1));
+      if (el) el.scrollIntoView();
+    }
+  }
+
+  // ============================================================
+  // IN-ARTICLE TABLE OF CONTENTS (non-intrusive; only for long posts)
+  // ============================================================
+
+  function initArticleTOC() {
+    const content = $('.article__content');
+    if (!content) return;
+    const headings = $$('h2, h3', content);
+    if (headings.length < 3) return; // Not worth a TOC on short posts.
+
+    const used = new Set();
+    const items = headings.map((h) => {
+      let id = h.id || tagSlug(h.textContent).slice(0, 60) || 'section';
+      let unique = id;
+      let n = 2;
+      while (used.has(unique) || document.getElementById(unique)) { unique = id + '-' + n++; }
+      used.add(unique);
+      h.id = unique;
+      const level = h.tagName.toLowerCase();
+      return `<li class="toc__item toc__item--${level}"><a href="#${unique}" class="toc__link">${escapeHtml(h.textContent)}</a></li>`;
+    });
+
+    const nav = document.createElement('details');
+    nav.className = 'toc';
+    nav.open = true;
+    nav.innerHTML = `<summary class="toc__title">Contents</summary><ul class="toc__list">${items.join('')}</ul>`;
+    content.parentNode.insertBefore(nav, content);
   }
 
   // ============================================================
@@ -532,8 +658,10 @@
     initReadingProgress();
     initThemeToggle();
     initBackToTop();
+    initArticleTOC();
     initHomepageList();
     initArchiveList();
+    initTagsPage();
 
     // Log initialization for debugging
     console.log('[Public Blog] Initialized — Swiss Modernism 2.0');
