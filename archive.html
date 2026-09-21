@@ -43,30 +43,32 @@
         <p class="page-description">All articles, chronologically. {{TOTAL_ARTICLES}} essays and counting.</p>
       </header>
 
-      <!-- Year-based archive -->
+      <!-- Year-based archive. Replaced dynamically from the database (/api/posts)
+           when JavaScript is available; the markup below is the static fallback. -->
+      <div id="dynamic-archive">
       <section class="archive-year animate-fade-in-up delay-1" aria-labelledby="year-2026">
         <h2 id="year-2026" class="archive__year-heading">2026</h2>
         <ul class="article-list" role="list">
           <li>
-            <a href="articles/the-art-of-slow-reading.html" class="article-list__item">
+            <a href="/articles/the-art-of-slow-reading" class="article-list__item">
               <time class="article-list__meta" datetime="2026-09-15">Sep 15</time>
               <h3 class="article-list__headline">The Art of Slow Reading in a Fast World</h3>
             </a>
           </li>
           <li>
-            <a href="articles/finding-signal-in-noise.html" class="article-list__item">
+            <a href="/articles/finding-signal-in-noise" class="article-list__item">
               <time class="article-list__meta" datetime="2026-09-10">Sep 10</time>
               <h3 class="article-list__headline">Finding Signal in the Noise</h3>
             </a>
           </li>
           <li>
-            <a href="articles/the-geometry-of-habits.html" class="article-list__item">
+            <a href="/articles/the-geometry-of-habits" class="article-list__item">
               <time class="article-list__meta" datetime="2026-09-03">Sep 3</time>
               <h3 class="article-list__headline">The Geometry of Habits</h3>
             </a>
           </li>
           <li>
-            <a href="articles/why-we-write.html" class="article-list__item">
+            <a href="/articles/why-we-write" class="article-list__item">
               <time class="article-list__meta" datetime="2026-08-28">Aug 28</time>
               <h3 class="article-list__headline">Why We Write</h3>
             </a>
@@ -121,6 +123,7 @@
           </li>
         </ul>
       </section>
+      </div>
 
       <!-- Newsletter Signup -->
       <section class="newsletter animate-fade-in-up delay-3" id="subscribe" aria-labelledby="newsletter-heading">

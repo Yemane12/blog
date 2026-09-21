@@ -1,6 +1,50 @@
 # Public Blog
 
-A personal blog built with static HTML/CSS/JS — zero build step, zero framework, zero dependencies.
+A personal blog with a **Supabase (Postgres) backend**, served as static HTML/CSS/JS
+with a small set of **Vercel serverless functions**, and deployed on **Vercel**.
+
+Posts and newsletter subscribers live in Supabase. The homepage and archive load
+the post list from the database, article pages are server-rendered from the database
+(so they work without JavaScript and are crawlable), and the newsletter form writes
+real subscribers to the database.
+
+## Architecture
+
+```
+Browser ──> Static HTML/CSS/JS (index, archive, tags, about, ...)
+        └─> /api/posts            (list published posts)      ─┐
+        └─> /api/post?slug=…       (single post JSON)           ├─> Supabase Postgres
+        └─> /articles/:slug        (server-rendered article)   │   (posts, subscribers)
+        └─> /api/subscribe (POST)  (newsletter signup)         ─┘
+```
+
+- **Database:** Supabase project `blog`. Tables `posts` and `subscribers`, both with
+  Row Level Security. Anyone may read published posts and insert a subscriber; the
+  subscriber list is not publicly readable.
+- **API:** Node serverless functions in `/api`, using `@supabase/supabase-js` with the
+  anon key (safe under RLS). Configured via env vars `SUPABASE_URL` and `SUPABASE_ANON_KEY`.
+- **Routing:** `vercel.json` rewrites `/articles/:slug` to the server-rendering function.
+
+### Database setup / re-seeding
+
+- Schema lives in `supabase/migrations/`.
+- `supabase/seed.sql` is generated from the article HTML in `articles/` by
+  `node scripts/generate-seed.mjs` and loaded into the `posts` table.
+
+### Environment variables (set in Vercel Project Settings → Environment Variables)
+
+```
+SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_ANON_KEY=<anon or publishable key>
+```
+
+See `.env.example`.
+
+---
+
+## Original static design
+
+Built with static HTML/CSS/JS — zero build step, zero framework, minimal dependencies.
 
 ## Design System
 

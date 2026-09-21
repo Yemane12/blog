@@ -14,8 +14,8 @@
 
     <item>
       <title>The Art of Slow Reading in a Fast World</title>
-      <link>https://publicblog.example/articles/the-art-of-slow-reading.html</link>
-      <guid isPermaLink="true">https://publicblog.example/articles/the-art-of-slow-reading.html</guid>
+      <link>https://publicblog.example//articles/the-art-of-slow-reading</link>
+      <guid isPermaLink="true">https://publicblog.example//articles/the-art-of-slow-reading</guid>
       <description><![CDATA[Why the best ideas require patience, and how to reclaim your attention from the algorithm.]]></description>
       <content:encoded><![CDATA[<p>We've optimized for speed. Infinite scroll, TL;DR summaries, fifteen-second videos, AI-generated summaries of AI-generated summaries. The modern internet treats reading as a throughput problem — how much content can you consume per minute?</p><p>But understanding doesn't scale with velocity.</p><p>When you read quickly, you're not reading — you're scanning. You're pattern-matching against what you already know, extracting the gist, discarding the texture. The gist is useful for traffic reports and weather forecasts. It's fatal for ideas that change how you think.</p>]]></content:encoded>
       <pubDate>Tue, 15 Sep 2026 12:00:00 GMT</pubDate>
@@ -28,8 +28,8 @@
 
     <item>
       <title>Finding Signal in the Noise</title>
-      <link>https://publicblog.example/articles/finding-signal-in-noise.html</link>
-      <guid isPermaLink="true">https://publicblog.example/articles/finding-signal-in-noise.html</guid>
+      <link>https://publicblog.example//articles/finding-signal-in-noise</link>
+      <guid isPermaLink="true">https://publicblog.example//articles/finding-signal-in-noise</guid>
       <description><![CDATA[How to filter what matters in an infinite feed.]]></description>
       <content:encoded><![CDATA[<p>The signal-to-noise ratio of the modern internet approaches zero. Here's how to build your own filters.</p>]]></content:encoded>
       <pubDate>Sat, 10 Sep 2026 12:00:00 GMT</pubDate>
@@ -41,8 +41,8 @@
 
     <item>
       <title>The Geometry of Habits</title>
-      <link>https://publicblog.example/articles/the-geometry-of-habits.html</link>
-      <guid isPermaLink="true">https://publicblog.example/articles/the-geometry-of-habits.html</guid>
+      <link>https://publicblog.example//articles/the-geometry-of-habits</link>
+      <guid isPermaLink="true">https://publicblog.example//articles/the-geometry-of-habits</guid>
       <description><![CDATA[Why small changes compound in non-linear ways.]]></description>
       <content:encoded><![CDATA[<p>Habits aren't linear. They're geometric — small deposits compound into exponential returns.</p>]]></content:encoded>
       <pubDate>Thu, 03 Sep 2026 12:00:00 GMT</pubDate>
@@ -54,8 +54,8 @@
 
     <item>
       <title>Why We Write</title>
-      <link>https://publicblog.example/articles/why-we-write.html</link>
-      <guid isPermaLink="true">https://publicblog.example/articles/why-we-write.html</guid>
+      <link>https://publicblog.example//articles/why-we-write</link>
+      <guid isPermaLink="true">https://publicblog.example//articles/why-we-write</guid>
       <description><![CDATA[On the compulsion to make thoughts permanent.]]></description>
       <content:encoded><![CDATA[<p>We write to discover what we think. The act of writing is the act of thinking made visible.</p>]]></content:encoded>
       <pubDate>Fri, 28 Aug 2026 12:00:00 GMT</pubDate>
