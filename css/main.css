@@ -1265,3 +1265,34 @@ hr {
 .article__content h2,
 .article__content h3 { scroll-margin-top: 1.5rem; }
 .tag-section, .archive-year { scroll-margin-top: 1.5rem; }
+
+/* Social share buttons on homepage cards */
+.card-share {
+  display: flex;
+  gap: .4rem;
+  align-items: center;
+  margin-top: .45rem;
+  padding-left: .4rem;
+}
+.card-share__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  opacity: .65;
+  transition: opacity .15s ease, background-color .15s ease, color .15s ease, border-color .15s ease;
+}
+.card-share__btn:hover { opacity: 1; background: color-mix(in srgb, currentColor 8%, transparent); }
+.card-share__btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.card-share__copy.is-copied {
+  opacity: 1;
+  color: var(--color-accent, #EC4899);
+  border-color: color-mix(in srgb, var(--color-accent, #EC4899) 45%, transparent);
+}
