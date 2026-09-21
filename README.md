@@ -31,6 +31,28 @@ Browser ──> Static HTML/CSS/JS (index, archive, tags, about, ...)
 - `supabase/seed.sql` is generated from the article HTML in `articles/` by
   `node scripts/generate-seed.mjs` and loaded into the `posts` table.
 
+### Publishing new posts
+
+Two ways to add a post to the database:
+
+1. **Admin page (easiest):** visit `/admin.html`, paste your **admin token**, write the
+   essay in plain text (blank lines = paragraphs; `## Heading`, `> quote`, `- list`,
+   `**bold**`, `[link](https://…)`), and click **Publish**. The post appears immediately
+   on the homepage, archive, and at `/articles/<slug>`. The token is stored only in your
+   browser.
+
+2. **API:** `POST /api/publish` with the token in an `Authorization: Bearer <token>`
+   (or `x-admin-token`) header and a JSON body of `{ title, body | content, dek, tags, … }`.
+
+Publishing is gated by the `publish_post()` Postgres function, which verifies the admin
+token against a value in the private `private.settings` table before writing — so even the
+public anon key cannot create posts without it. Set / rotate the token with:
+
+```sql
+insert into private.settings (key, value) values ('admin_token', '<new-secret>')
+on conflict (key) do update set value = excluded.value;
+```
+
 ### Environment variables (set in Vercel Project Settings → Environment Variables)
 
 ```
