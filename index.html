@@ -108,7 +108,10 @@
 
       <!-- Sponsor / Ad board (populated from /api/ads) -->
       <section class="ad-board" id="ad-board" aria-label="Sponsors" hidden>
-        <p class="ad-board__label">Sponsored</p>
+        <div class="ad-board__head">
+          <p class="ad-board__label">Sponsored</p>
+          <span class="ad-board__rule" aria-hidden="true"></span>
+        </div>
         <div class="ad-board__grid" id="ad-board-grid"></div>
       </section>
 

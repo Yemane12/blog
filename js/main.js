@@ -243,12 +243,17 @@
           ? `<img class="ad-card__img" src="${escapeHtml(ad.image_url)}" alt="" loading="lazy">`
           : '';
         const body = ad.body ? `<p class="ad-card__text">${escapeHtml(ad.body)}</p>` : '';
+        let domain = '';
+        try { if (ad.link_url) domain = new URL(ad.link_url).hostname.replace(/^www\./, ''); } catch (_) {}
+        const cta = domain ? `<span class="ad-card__cta">${escapeHtml(domain)} &rarr;</span>` : '';
         return `
         <a class="ad-card" href="${href}" target="_blank" rel="noopener sponsored nofollow">
           ${img}
           <div class="ad-card__body">
+            <span class="ad-card__chip">Ad</span>
             <p class="ad-card__title">${escapeHtml(ad.title)}</p>
             ${body}
+            ${cta}
           </div>
         </a>`;
       })
