@@ -43,6 +43,12 @@
         <p class="page-description">All articles, chronologically. {{TOTAL_ARTICLES}} essays and counting.</p>
       </header>
 
+      <!-- Search (progressive enhancement; filters the list below) -->
+      <div class="archive-search" id="archive-search-wrap" hidden>
+        <input type="search" id="archive-search" class="input" placeholder="Search articles by title, tag, or summary…" aria-label="Search articles" autocomplete="off">
+        <p class="archive-search__status hint" id="archive-search-status" aria-live="polite"></p>
+      </div>
+
       <!-- Year-based archive. Replaced dynamically from the database (/api/posts)
            when JavaScript is available; the markup below is the static fallback. -->
       <div id="dynamic-archive">

@@ -43,6 +43,9 @@
         <p class="page-description">Browse articles by theme. {{TOTAL_TAGS}} topics, {{TOTAL_ARTICLES}} articles.</p>
       </header>
 
+      <!-- Replaced dynamically from the database (/api/posts) when JS is
+           available; the markup below is the static fallback. -->
+      <div id="dynamic-tags">
       <div class="tags-cloud animate-fade-in-up delay-1" role="list" aria-label="Article topics">
         <a href="tags.html#reading" class="article__tag" role="listitem">Reading (8)</a>
         <a href="tags.html#attention" class="article__tag" role="listitem">Attention (6)</a>
@@ -88,6 +91,7 @@
           <li><a href="articles/digital-gardens.html" class="article-list__item"><time class="article-list__meta" datetime="2025-11-20">Nov 20</time><h3 class="article-list__headline">Digital Gardens</h3></a></li>
         </ul>
       </section>
+      </div>
 
       <!-- Newsletter Signup -->
       <section class="newsletter animate-fade-in-up delay-6" id="subscribe" aria-labelledby="newsletter-heading">
