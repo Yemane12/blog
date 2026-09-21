@@ -458,25 +458,62 @@
   // ============================================================
 
   function initThemeToggle() {
-    const toggle = $('#theme-toggle');
-    if (!toggle) return;
-
-    const html = document.documentElement;
-    const savedTheme = localStorage.getItem('theme');
-
-    // Apply saved theme on load
-    if (savedTheme) {
-      html.setAttribute('data-theme', savedTheme);
-      toggle.setAttribute('aria-pressed', savedTheme === 'dark');
+    const nav = $('.header__nav');
+    let toggle = $('#theme-toggle');
+    if (!toggle) {
+      if (!nav) return;
+      toggle = document.createElement('button');
+      toggle.id = 'theme-toggle';
+      toggle.type = 'button';
+      toggle.className = 'theme-toggle';
+      toggle.setAttribute('aria-label', 'Toggle dark mode');
+      nav.appendChild(toggle);
     }
 
-    toggle.addEventListener('click', () => {
-      const isDark = html.getAttribute('data-theme') === 'dark';
-      const newTheme = isDark ? 'light' : 'dark';
+    const html = document.documentElement;
+    let saved = null;
+    try { saved = localStorage.getItem('theme'); } catch (_) {}
+    if (saved === 'dark' || saved === 'light') html.setAttribute('data-theme', saved);
 
+    const effectiveDark = () => {
+      const t = html.getAttribute('data-theme');
+      if (t === 'dark') return true;
+      if (t === 'light') return false;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    };
+    const updateIcon = () => {
+      const dark = effectiveDark();
+      toggle.innerHTML = dark ? '<span aria-hidden="true">☀</span>' : '<span aria-hidden="true">☾</span>';
+      toggle.setAttribute('aria-pressed', String(dark));
+    };
+    updateIcon();
+
+    toggle.addEventListener('click', () => {
+      const newTheme = effectiveDark() ? 'light' : 'dark';
       html.setAttribute('data-theme', newTheme);
-      localStorage.setItem('theme', newTheme);
-      toggle.setAttribute('aria-pressed', newTheme === 'dark');
+      try { localStorage.setItem('theme', newTheme); } catch (_) {}
+      updateIcon();
+    });
+  }
+
+  // ============================================================
+  // BACK TO TOP (unobtrusive; appears only after scrolling)
+  // ============================================================
+
+  function initBackToTop() {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'back-to-top';
+    btn.setAttribute('aria-label', 'Back to top');
+    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="18 15 12 9 6 15"></polyline></svg>';
+    document.body.appendChild(btn);
+
+    const onScroll = () => { btn.classList.toggle('is-visible', window.scrollY > 600); };
+    window.addEventListener('scroll', debounce(onScroll, 100), { passive: true });
+    onScroll();
+
+    btn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
     });
   }
 
@@ -494,6 +531,7 @@
     initAccountNav();
     initReadingProgress();
     initThemeToggle();
+    initBackToTop();
     initHomepageList();
     initArchiveList();
 

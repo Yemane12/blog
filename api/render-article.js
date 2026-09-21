@@ -24,7 +24,62 @@ const fmtDate = (iso) => {
   }
 };
 
-function renderPage(post, origin) {
+/**
+ * Builds the "previous / next" nav and a "More to read" grid from the full
+ * list of published posts. Appears at the end of the article — after the
+ * reader has finished — so it never interrupts reading.
+ */
+function relatedHtml(current, all) {
+  if (!Array.isArray(all) || all.length === 0) return '';
+  const idx = all.findIndex((p) => p.slug === current.slug);
+  const newer = idx > 0 ? all[idx - 1] : null;
+  const older = idx >= 0 && idx < all.length - 1 ? all[idx + 1] : null;
+
+  const tags = current.tags || [];
+  const others = all.filter(
+    (p) => p.slug !== current.slug && (!newer || p.slug !== newer.slug) && (!older || p.slug !== older.slug)
+  );
+  let related = others.filter((p) => (p.tags || []).some((t) => tags.includes(t)));
+  for (const p of others) {
+    if (related.length >= 3) break;
+    if (!related.includes(p)) related.push(p);
+  }
+  related = related.slice(0, 3);
+
+  const card = (p) => `
+        <a class="related-card" href="/articles/${encodeURIComponent(p.slug)}">
+          ${p.cover_image
+            ? `<img class="related-card__img" src="${esc(p.cover_image)}" alt="" loading="lazy">`
+            : '<span class="related-card__img related-card__img--empty"></span>'}
+          <span class="related-card__title">${esc(p.title)}</span>
+        </a>`;
+
+  const nav = (older || newer)
+    ? `
+      <nav class="post-nav" aria-label="More posts">
+        ${older
+          ? `<a class="post-nav__link post-nav__prev" href="/articles/${encodeURIComponent(older.slug)}"><span class="post-nav__dir">← Previous</span><span class="post-nav__title">${esc(older.title)}</span></a>`
+          : '<span></span>'}
+        ${newer
+          ? `<a class="post-nav__link post-nav__next" href="/articles/${encodeURIComponent(newer.slug)}"><span class="post-nav__dir">Next →</span><span class="post-nav__title">${esc(newer.title)}</span></a>`
+          : '<span></span>'}
+      </nav>`
+    : '';
+
+  const grid = related.length
+    ? `
+      <section class="related" aria-label="More essays">
+        <h2 class="related__heading">More to read</h2>
+        <div class="related__grid">${related.map(card).join('')}</div>
+      </section>`
+    : '';
+
+  if (!nav && !grid) return '';
+  return `<div class="container">${nav}${grid}</div>`;
+}
+
+function renderPage(post, origin, extras) {
+  extras = extras || {};
   const url = `${origin}/articles/${post.slug}`;
   const title = esc(post.title);
   const dek = esc(post.dek || '');
@@ -122,6 +177,8 @@ function renderPage(post, origin) {
       </footer>
     </article>
 
+    ${extras.related || ''}
+
     <section class="newsletter" id="subscribe" aria-labelledby="newsletter-heading">
       <div class="container">
         <h2 id="newsletter-heading" class="newsletter__headline">Liked this one?</h2>
@@ -183,8 +240,20 @@ export default async function handler(req, res) {
         .send('<!DOCTYPE html><meta charset="utf-8"><title>Not found</title><p>Article not found. <a href="/">Back home</a>.</p>');
     }
 
+    let related = '';
+    try {
+      const { data: all } = await supabase
+        .from('posts')
+        .select('slug,title,cover_image,published_at,tags')
+        .eq('is_published', true)
+        .order('published_at', { ascending: false });
+      related = relatedHtml(data, all || []);
+    } catch (_) {
+      /* related section is optional */
+    }
+
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
-    return res.status(200).send(renderPage(data, origin));
+    return res.status(200).send(renderPage(data, origin, { related }));
   } catch (err) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     return res.status(500).send(`<!DOCTYPE html><meta charset="utf-8"><title>Error</title><p>Could not load this article.</p>`);

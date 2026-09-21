@@ -84,9 +84,10 @@
   --header-height: 64px;
 }
 
-/* Dark Mode */
+/* Dark Mode — follows the OS unless the reader forces light via data-theme,
+   and can be forced on manually with data-theme="dark". */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --color-primary: #FAFAFA;
     --color-on-primary: #09090B;
     --color-secondary: #D4D4D8;
@@ -105,6 +106,26 @@
     --color-ring: #FAFAFA;
     --focus-ring: 0 0 0 3px var(--color-primary);
   }
+}
+
+:root[data-theme="dark"] {
+  --color-primary: #FAFAFA;
+  --color-on-primary: #09090B;
+  --color-secondary: #D4D4D8;
+  --color-on-secondary: #09090B;
+  --color-accent: #F472B6;
+  --color-on-accent: #000000;
+  --color-background: #09090B;
+  --color-foreground: #FAFAFA;
+  --color-card: #18181B;
+  --color-card-foreground: #FAFAFA;
+  --color-muted: #27272A;
+  --color-muted-foreground: #A1A1AA;
+  --color-border: #3F3F46;
+  --color-destructive: #EF4444;
+  --color-on-destructive: #09090B;
+  --color-ring: #FAFAFA;
+  --focus-ring: 0 0 0 3px var(--color-primary);
 }
 
 /* Reduced Motion */
