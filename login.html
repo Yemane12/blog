@@ -160,13 +160,15 @@
           return;
         }
         // No session returned — the account is auto-confirmed server-side, so
-        // sign in immediately for a seamless experience.
-        var s = await window.blogAuth.signIn(email, password);
-        if (s.error) {
-          show('ok', 'Account created — please sign in with your new credentials.');
-          return;
+        // sign in immediately. Retry a couple of times to avoid a race right
+        // after the account is created.
+        var s = null;
+        for (var i = 0; i < 3; i++) {
+          s = await window.blogAuth.signIn(email, password);
+          if (!s.error) { window.location.href = '/admin.html'; return; }
+          await new Promise(function (r) { setTimeout(r, 700); });
         }
-        window.location.href = '/admin.html';
+        show('ok', 'Account created! Click the "Sign in" tab and log in with your email and password.');
       });
 
       $('signout-btn').addEventListener('click', async function () {
