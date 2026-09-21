@@ -20,6 +20,20 @@ export function getSupabase() {
   });
 }
 
+/**
+ * A Supabase client that acts as the signed-in user, so Row Level Security
+ * applies to their identity. Pass the user's access token (JWT).
+ */
+export function getUserSupabase(jwt) {
+  if (!url || !anonKey) {
+    throw new Error('Supabase is not configured: set SUPABASE_URL and SUPABASE_ANON_KEY.');
+  }
+  return createClient(url, anonKey, {
+    global: { headers: { Authorization: `Bearer ${jwt}` } },
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
 /** Columns exposed for post listings (no full content). */
 export const LIST_COLUMNS =
   'slug,title,dek,excerpt,category,read_minutes,tags,published_at';

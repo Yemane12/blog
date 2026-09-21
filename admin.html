@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex, nofollow">
   <meta name="theme-color" content="#FAFAFA" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#09090B" media="(prefers-color-scheme: dark)">
-  <title>Publish a Post — Public Blog</title>
+  <title>Dashboard — Public Blog</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Bodoni:wght@400;500;600;700&family=Public+Sans:wght@300;400;500;600;700&display=swap">
@@ -14,14 +14,14 @@
   <link rel="stylesheet" href="/css/main.css">
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
   <style>
-    .admin-grid { display: grid; grid-template-columns: 1fr; gap: var(--space-4, 1rem); }
-    .admin-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4, 1rem); }
+    .admin-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+    .admin-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     @media (max-width: 640px) { .admin-row { grid-template-columns: 1fr; } }
-    .admin-field { display: flex; flex-direction: column; gap: .4rem; margin-bottom: var(--space-4, 1rem); }
+    .admin-field { display: flex; flex-direction: column; gap: .4rem; margin-bottom: 1rem; }
     .admin-field label { font-weight: 600; font-size: .85rem; }
     .admin-field .hint { font-size: .78rem; opacity: .65; font-weight: 400; }
     textarea.input { min-height: 300px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; line-height: 1.55; resize: vertical; }
-    .admin-actions { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; margin-top: var(--space-4, 1rem); }
+    .admin-actions { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; margin-top: 1rem; }
     .admin-status { margin-top: 1rem; padding: .85rem 1rem; border-radius: 8px; display: none; }
     .admin-status--ok { display: block; background: color-mix(in srgb, var(--color-accent, #EC4899) 12%, transparent); }
     .admin-status--err { display: block; background: color-mix(in srgb, #ef4444 16%, transparent); }
@@ -39,7 +39,12 @@
     .badge { display: inline-block; padding: .1rem .5rem; border-radius: 999px; font-size: .72rem; font-weight: 600; }
     .badge--live { background: color-mix(in srgb, #22c55e 22%, transparent); }
     .badge--draft { background: color-mix(in srgb, #eab308 26%, transparent); }
-    .section-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: var(--space-8, 3rem); }
+    .badge--role { background: color-mix(in srgb, currentColor 12%, transparent); text-transform: capitalize; }
+    .section-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 3rem; }
+    .account-bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+      padding: .7rem 1rem; border-radius: 10px; background: color-mix(in srgb, currentColor 6%, transparent); margin-bottom: 1.5rem; }
+    .gate { padding: 1.4rem; border-radius: 10px; background: color-mix(in srgb, currentColor 6%, transparent); }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
@@ -49,100 +54,126 @@
       <nav class="header__nav" role="navigation" aria-label="Main navigation">
         <a href="/" class="header__nav-link">Read</a>
         <a href="/archive.html" class="header__nav-link">Archive</a>
-        <a href="/admin.html" class="header__nav-link" aria-current="page">Publish</a>
+        <a href="/admin.html" class="header__nav-link" aria-current="page">Dashboard</a>
       </nav>
     </div>
   </header>
 
   <main class="main" role="main">
-    <div class="container" style="max-width: 860px;">
+    <div class="container" style="max-width: 900px;">
       <header class="page-header">
         <div>
-          <h1 class="page-title">Manage posts</h1>
-          <p class="page-description">Write, edit, publish, and delete essays straight from the database. Your admin token is stored only in this browser.</p>
+          <h1 class="page-title">Dashboard</h1>
+          <p class="page-description">Write and manage your articles.</p>
         </div>
       </header>
 
-      <div class="admin-field">
-        <label for="token">Admin token <span class="hint">— required for everything below; saved locally in this browser</span></label>
-        <input type="password" id="token" class="input" autocomplete="off" placeholder="paste your admin token">
+      <!-- Account bar (when signed in) -->
+      <div id="account-bar" class="account-bar hidden">
+        <span id="account-who"></span>
+        <button type="button" class="btn btn-secondary btn-sm" id="signout-btn">Sign out</button>
       </div>
 
-      <div id="editing-banner" class="editing-banner">
-        Editing <strong id="editing-slug"></strong> — saving will update this post.
-        <a href="#" id="cancel-edit">Cancel &amp; start a new post</a>
+      <!-- Signed out gate -->
+      <div id="gate-signedout" class="gate hidden">
+        <p style="margin-top:0;">You need to sign in to write or manage articles.</p>
+        <a href="/login.html" class="btn btn-primary">Sign in / Create account</a>
       </div>
 
-      <form id="publish-form" class="admin-grid" novalidate>
-        <div class="admin-field">
-          <label for="title">Title</label>
-          <input type="text" id="title" class="input" required placeholder="The Art of Slow Reading in a Fast World">
+      <!-- Pending approval gate -->
+      <div id="gate-pending" class="gate hidden">
+        <h2 style="margin-top:0;">You're signed in — pending author approval</h2>
+        <p>Your account is currently a <strong>reader</strong>. An admin needs to approve you as an author before you can publish. Check back soon.</p>
+      </div>
+
+      <!-- Author workspace -->
+      <div id="workspace" class="hidden">
+        <div id="editing-banner" class="editing-banner">
+          Editing <strong id="editing-slug"></strong> — saving will update this post.
+          <a href="#" id="cancel-edit">Cancel &amp; start a new post</a>
         </div>
 
-        <div class="admin-row">
+        <form id="publish-form" class="admin-grid" novalidate>
           <div class="admin-field">
-            <label for="slug">Slug <span class="hint">— optional; auto from title</span></label>
-            <input type="text" id="slug" class="input" placeholder="the-art-of-slow-reading">
+            <label for="title">Title</label>
+            <input type="text" id="title" class="input" required placeholder="The Art of Slow Reading in a Fast World">
           </div>
-          <div class="admin-field">
-            <label for="category">Category</label>
-            <input type="text" id="category" class="input" value="Essay">
-          </div>
-        </div>
 
-        <div class="admin-field">
-          <label for="dek">Dek <span class="hint">— one-line summary shown under the title and in listings</span></label>
-          <input type="text" id="dek" class="input" placeholder="Why the best ideas require patience.">
-        </div>
-
-        <div class="admin-field">
-          <label for="excerpt">Excerpt <span class="hint">— optional; defaults to the dek</span></label>
-          <input type="text" id="excerpt" class="input" placeholder="A short teaser for the homepage.">
-        </div>
-
-        <div class="admin-row">
-          <div class="admin-field">
-            <label for="tags">Tags <span class="hint">— comma separated</span></label>
-            <input type="text" id="tags" class="input" placeholder="Reading, Attention, Culture">
-          </div>
-          <div class="admin-row" style="margin:0;">
+          <div class="admin-row">
             <div class="admin-field">
-              <label for="read_minutes">Read min. <span class="hint">— auto if blank</span></label>
-              <input type="number" id="read_minutes" class="input" min="1" placeholder="8">
+              <label for="slug">Slug <span class="hint">— optional; auto from title</span></label>
+              <input type="text" id="slug" class="input" placeholder="the-art-of-slow-reading">
             </div>
             <div class="admin-field">
-              <label for="published_at">Date <span class="hint">— optional</span></label>
-              <input type="date" id="published_at" class="input">
+              <label for="category">Category</label>
+              <input type="text" id="category" class="input" value="Essay">
             </div>
           </div>
+
+          <div class="admin-field">
+            <label for="dek">Dek <span class="hint">— one-line summary shown under the title and in listings</span></label>
+            <input type="text" id="dek" class="input" placeholder="Why the best ideas require patience.">
+          </div>
+
+          <div class="admin-field">
+            <label for="excerpt">Excerpt <span class="hint">— optional; defaults to the dek</span></label>
+            <input type="text" id="excerpt" class="input" placeholder="A short teaser for the homepage.">
+          </div>
+
+          <div class="admin-row">
+            <div class="admin-field">
+              <label for="tags">Tags <span class="hint">— comma separated</span></label>
+              <input type="text" id="tags" class="input" placeholder="Reading, Attention, Culture">
+            </div>
+            <div class="admin-row" style="margin:0;">
+              <div class="admin-field">
+                <label for="read_minutes">Read min. <span class="hint">— auto if blank</span></label>
+                <input type="number" id="read_minutes" class="input" min="1" placeholder="8">
+              </div>
+              <div class="admin-field">
+                <label for="published_at">Date <span class="hint">— optional</span></label>
+                <input type="date" id="published_at" class="input">
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-field">
+            <label for="body">Body</label>
+            <p class="hint" style="margin:0 0 .3rem;">Plain text: blank lines separate paragraphs. Use <code>## Heading</code>, <code>### Subheading</code>, <code>&gt; quote</code>, <code>- list item</code>, <code>**bold**</code>, <code>*italic*</code>, <code>[link](https://…)</code>. Tick “raw HTML” to paste HTML (auto-ticked when editing).</p>
+            <textarea id="body" class="input" placeholder="We've optimized for speed...
+
+## A section
+
+More text..."></textarea>
+          </div>
+
+          <div class="admin-actions">
+            <button type="submit" class="btn btn-primary" id="publish-btn">Publish</button>
+            <button type="button" class="btn btn-secondary" id="new-btn">New post</button>
+            <label class="admin-check"><input type="checkbox" id="raw_html"> Body is raw HTML</label>
+            <label class="admin-check"><input type="checkbox" id="is_published" checked> Published (visible)</label>
+          </div>
+
+          <div id="status" class="admin-status" role="status" aria-live="polite"></div>
+        </form>
+
+        <div class="section-head">
+          <h2 class="page-title" style="font-size:1.4rem;margin:0;">Your posts</h2>
+          <button type="button" class="btn btn-secondary btn-sm" id="refresh-btn">Refresh</button>
         </div>
+        <div id="list-status" class="hint" style="margin:.5rem 0;">Loading…</div>
+        <div id="list-wrap" style="overflow-x:auto;"></div>
 
-        <div class="admin-field">
-          <label for="body">Body</label>
-          <p class="hint" style="margin:0 0 .3rem;">Plain text: blank lines separate paragraphs. Use <code>## Heading</code>, <code>### Subheading</code>, <code>&gt; quote</code>, <code>- list item</code>, <code>**bold**</code>, <code>*italic*</code>, <code>[link](https://…)</code>. Tick “raw HTML” to paste HTML (auto-ticked when editing an existing post).</p>
-          <textarea id="body" class="input" placeholder="We've optimized for speed. Infinite scroll, TL;DR summaries...
-
-## The Throughput Trap
-
-The algorithm doesn't want you to understand..."></textarea>
+        <!-- Admin-only: author approvals -->
+        <div id="authors-section" class="hidden">
+          <div class="section-head">
+            <h2 class="page-title" style="font-size:1.4rem;margin:0;">Authors &amp; approvals</h2>
+            <button type="button" class="btn btn-secondary btn-sm" id="refresh-authors-btn">Refresh</button>
+          </div>
+          <div id="authors-status" class="hint" style="margin:.5rem 0;"></div>
+          <div id="authors-wrap" style="overflow-x:auto;"></div>
         </div>
-
-        <div class="admin-actions">
-          <button type="submit" class="btn btn-primary" id="publish-btn">Publish</button>
-          <button type="button" class="btn btn-secondary" id="new-btn">New post</button>
-          <label class="admin-check"><input type="checkbox" id="raw_html"> Body is raw HTML</label>
-          <label class="admin-check"><input type="checkbox" id="is_published" checked> Published (visible)</label>
-        </div>
-
-        <div id="status" class="admin-status" role="status" aria-live="polite"></div>
-      </form>
-
-      <div class="section-head">
-        <h2 class="page-title" style="font-size:1.4rem;margin:0;">Your posts</h2>
-        <button type="button" class="btn btn-secondary btn-sm" id="refresh-btn">Refresh</button>
       </div>
-      <div id="list-status" class="hint" style="margin:.5rem 0;">Enter your token to load posts.</div>
-      <div id="list-wrap" style="overflow-x:auto;"></div>
     </div>
   </main>
 
@@ -155,38 +186,72 @@ The algorithm doesn't want you to understand..."></textarea>
     </div>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/js/auth.js"></script>
   <script>
     (function () {
       var $ = function (id) { return document.getElementById(id); };
-      var TOKEN_KEY = 'blog_admin_token';
       var editingSlug = null;
-
-      try { var saved = localStorage.getItem(TOKEN_KEY); if (saved) $('token').value = saved; } catch (e) {}
-
-      function token() { return $('token').value.trim(); }
-
-      function slugify(s) {
-        return String(s || '').toLowerCase().trim()
-          .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80);
-      }
+      var role = 'reader';
 
       function esc(s) {
         return String(s == null ? '' : s)
           .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
       }
-
+      function slugify(s) {
+        return String(s || '').toLowerCase().trim()
+          .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80);
+      }
+      function fmtDate(iso) {
+        var d = new Date(iso); if (isNaN(d)) return '';
+        return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+      }
       function showStatus(kind, html) {
         var el = $('status'); el.className = 'admin-status admin-status--' + kind; el.innerHTML = html;
       }
+      function af(path, opts) { return window.blogAuth.authedFetch(path, opts); }
 
-      // ---- Slug auto-suggest ------------------------------------------------
+      // ---------- Boot ----------
+      async function boot() {
+        if (!window.blogAuth) { $('gate-signedout').classList.remove('hidden'); return; }
+        var token = await window.blogAuth.getToken();
+        if (!token) { $('gate-signedout').classList.remove('hidden'); return; }
+
+        var meRes = await af('/api/me');
+        if (meRes.status === 401) { $('gate-signedout').classList.remove('hidden'); return; }
+        var me = await meRes.json();
+        role = (me.profile && me.profile.role) || 'reader';
+
+        $('account-bar').classList.remove('hidden');
+        $('account-who').innerHTML = 'Signed in as <strong>' + esc(me.user.email) +
+          '</strong> <span class="badge badge--role">' + esc(role) + '</span>';
+
+        if (role === 'reader') {
+          $('gate-pending').classList.remove('hidden');
+          return;
+        }
+
+        // author or admin
+        $('workspace').classList.remove('hidden');
+        if (role === 'admin') {
+          $('authors-section').classList.remove('hidden');
+          loadAuthors();
+        }
+        loadPosts();
+      }
+
+      $('signout-btn').addEventListener('click', async function () {
+        await window.blogAuth.signOut();
+        window.location.href = '/login.html';
+      });
+
+      // ---------- Editor ----------
       var slugTouched = false;
       $('slug').addEventListener('input', function () { slugTouched = true; });
       $('title').addEventListener('input', function () {
         if (!slugTouched && !editingSlug) $('slug').value = slugify($('title').value);
       });
 
-      // ---- Form reset / new post -------------------------------------------
       function resetForm() {
         editingSlug = null; slugTouched = false;
         $('publish-form').reset();
@@ -199,14 +264,11 @@ The algorithm doesn't want you to understand..."></textarea>
       $('new-btn').addEventListener('click', function () { resetForm(); showStatus('ok', 'Started a new post.'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
       $('cancel-edit').addEventListener('click', function (e) { e.preventDefault(); resetForm(); });
 
-      // ---- Publish / update -------------------------------------------------
       $('publish-form').addEventListener('submit', async function (e) {
         e.preventDefault();
         var btn = $('publish-btn');
-        if (!token()) { showStatus('err', 'Enter your admin token first.'); return; }
         if (!$('title').value.trim()) { showStatus('err', 'A title is required.'); return; }
         if (!$('body').value.trim()) { showStatus('err', 'The body is empty.'); return; }
-        try { localStorage.setItem(TOKEN_KEY, token()); } catch (e) {}
 
         var payload = {
           title: $('title').value.trim(),
@@ -225,9 +287,9 @@ The algorithm doesn't want you to understand..."></textarea>
         btn.disabled = true; var label = btn.textContent; btn.textContent = 'Saving…';
         showStatus('ok', 'Saving…');
         try {
-          var res = await fetch('/api/publish', {
+          var res = await af('/api/publish', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-admin-token': token() },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           });
           var data = {}; try { data = await res.json(); } catch (e) {}
@@ -237,39 +299,32 @@ The algorithm doesn't want you to understand..."></textarea>
               (editingSlug ? 'Updated ' : 'Published ') + '<strong>' + esc(payload.title) + '</strong> · ' +
               (data.read_minutes || '?') + ' min read → ' +
               '<a href="' + data.url + '" target="_blank" rel="noopener">view the post ↗</a>');
-            resetForm();
-            loadPosts();
+            resetForm(); loadPosts();
           }
         } catch (err) { showStatus('err', 'Network error. Please try again.'); }
         finally { btn.disabled = false; btn.textContent = label; }
       });
 
-      // ---- List / edit / delete / toggle -----------------------------------
-      function fmtDate(iso) {
-        var d = new Date(iso); if (isNaN(d)) return '';
-        return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-      }
-
+      // ---------- Posts ----------
       async function loadPosts() {
-        if (!token()) { $('list-status').textContent = 'Enter your token to load posts.'; $('list-wrap').innerHTML = ''; return; }
         $('list-status').textContent = 'Loading…';
         try {
-          var res = await fetch('/api/admin/list', { headers: { 'x-admin-token': token() } });
+          var res = await af('/api/admin/list');
           var data = {}; try { data = await res.json(); } catch (e) {}
-          if (!res.ok) { $('list-status').textContent = data.error || 'Could not load posts.'; $('list-wrap').innerHTML = ''; return; }
+          if (!res.ok) { $('list-status').textContent = data.error || 'Could not load posts.'; return; }
           renderTable(data.posts || []);
-          $('list-status').textContent = (data.posts || []).length + ' post(s).';
+          $('list-status').textContent = (data.posts || []).length + ' post(s)' + (role === 'admin' ? ' (all authors)' : '') + '.';
         } catch (err) { $('list-status').textContent = 'Network error loading posts.'; }
       }
 
       function renderTable(posts) {
-        if (!posts.length) { $('list-wrap').innerHTML = '<p class="hint">No posts yet.</p>'; return; }
+        if (!posts.length) { $('list-wrap').innerHTML = '<p class="hint">No posts yet — write your first above.</p>'; return; }
+        var showAuthor = role === 'admin';
         var rows = posts.map(function (p) {
-          var badge = p.is_published
-            ? '<span class="badge badge--live">Live</span>'
-            : '<span class="badge badge--draft">Draft</span>';
+          var badge = p.is_published ? '<span class="badge badge--live">Live</span>' : '<span class="badge badge--draft">Draft</span>';
           return '<tr>' +
             '<td><strong>' + esc(p.title) + '</strong><span class="slug">' + esc(p.slug) + '</span></td>' +
+            (showAuthor ? '<td>' + esc(p.author_name || '—') + '</td>' : '') +
             '<td>' + fmtDate(p.published_at) + '</td>' +
             '<td>' + badge + '</td>' +
             '<td><div class="row-actions">' +
@@ -280,25 +335,22 @@ The algorithm doesn't want you to understand..."></textarea>
           '</tr>';
         }).join('');
         $('list-wrap').innerHTML =
-          '<table class="posts-table"><thead><tr><th>Title</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>' +
-          rows + '</tbody></table>';
+          '<table class="posts-table"><thead><tr><th>Title</th>' + (showAuthor ? '<th>Author</th>' : '') +
+          '<th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>' + rows + '</tbody></table>';
       }
 
-      // Event delegation for the table action buttons.
       $('list-wrap').addEventListener('click', function (e) {
         var b = e.target.closest('button[data-act]'); if (!b) return;
-        var slug = b.getAttribute('data-slug');
-        var act = b.getAttribute('data-act');
+        var slug = b.getAttribute('data-slug'), act = b.getAttribute('data-act');
         if (act === 'edit') editPost(slug);
         else if (act === 'delete') deletePost(slug);
         else if (act === 'toggle') togglePublish(slug, b.getAttribute('data-next') === 'true');
       });
 
       async function editPost(slug) {
-        if (!token()) return;
-        showStatus('ok', 'Loading “' + esc(slug) + '” for editing…');
+        showStatus('ok', 'Loading “' + esc(slug) + '”…');
         try {
-          var res = await fetch('/api/admin/get?slug=' + encodeURIComponent(slug), { headers: { 'x-admin-token': token() } });
+          var res = await af('/api/admin/get?slug=' + encodeURIComponent(slug));
           var data = {}; try { data = await res.json(); } catch (e) {}
           if (!res.ok) { showStatus('err', esc(data.error || 'Could not load post.')); return; }
           var p = data.post;
@@ -311,7 +363,7 @@ The algorithm doesn't want you to understand..."></textarea>
           $('tags').value = (p.tags || []).join(', ');
           $('read_minutes').value = p.read_minutes || '';
           $('published_at').value = p.published_at ? String(p.published_at).slice(0, 10) : '';
-          $('raw_html').checked = true;            // stored content is HTML
+          $('raw_html').checked = true;
           $('body').value = p.content || '';
           $('is_published').checked = !!p.is_published;
           $('editing-slug').textContent = p.slug;
@@ -319,52 +371,83 @@ The algorithm doesn't want you to understand..."></textarea>
           $('publish-btn').textContent = 'Update post';
           showStatus('ok', 'Editing “' + esc(p.title) + '”. Make changes and press Update.');
           window.scrollTo({ top: 0, behavior: 'smooth' });
-        } catch (err) { showStatus('err', 'Network error loading the post.'); }
+        } catch (err) { showStatus('err', 'Network error.'); }
       }
 
       async function deletePost(slug) {
-        if (!token()) return;
-        if (!window.confirm('Delete “' + slug + '” permanently? This cannot be undone.')) return;
+        if (!window.confirm('Delete “' + slug + '” permanently?')) return;
         try {
-          var res = await fetch('/api/admin/delete', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-admin-token': token() },
-            body: JSON.stringify({ slug: slug })
-          });
+          var res = await af('/api/admin/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ slug: slug }) });
           var data = {}; try { data = await res.json(); } catch (e) {}
           if (!res.ok) { showStatus('err', esc(data.error || 'Delete failed.')); return; }
           showStatus('ok', 'Deleted “' + esc(slug) + '”.');
           if (editingSlug === slug) resetForm();
           loadPosts();
-        } catch (err) { showStatus('err', 'Network error while deleting.'); }
+        } catch (err) { showStatus('err', 'Network error.'); }
       }
 
       async function togglePublish(slug, next) {
-        if (!token()) return;
         try {
-          var res = await fetch('/api/admin/set-published', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-admin-token': token() },
-            body: JSON.stringify({ slug: slug, is_published: next })
-          });
+          var res = await af('/api/admin/set-published', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ slug: slug, is_published: next }) });
           var data = {}; try { data = await res.json(); } catch (e) {}
           if (!res.ok) { showStatus('err', esc(data.error || 'Update failed.')); return; }
           showStatus('ok', (next ? 'Published' : 'Unpublished') + ' “' + esc(slug) + '”.');
           loadPosts();
-        } catch (err) { showStatus('err', 'Network error while updating.'); }
+        } catch (err) { showStatus('err', 'Network error.'); }
+      }
+      $('refresh-btn').addEventListener('click', loadPosts);
+
+      // ---------- Authors (admin only) ----------
+      async function loadAuthors() {
+        $('authors-status').textContent = 'Loading…';
+        try {
+          var res = await af('/api/admin/authors');
+          var data = {}; try { data = await res.json(); } catch (e) {}
+          if (!res.ok) { $('authors-status').textContent = data.error || 'Could not load authors.'; return; }
+          renderAuthors(data.authors || [], data.me);
+          $('authors-status').textContent = (data.authors || []).length + ' user(s).';
+        } catch (err) { $('authors-status').textContent = 'Network error.'; }
       }
 
-      // ---- Wire up load triggers -------------------------------------------
-      $('refresh-btn').addEventListener('click', loadPosts);
-      var tokenDebounce;
-      $('token').addEventListener('input', function () {
-        clearTimeout(tokenDebounce);
-        tokenDebounce = setTimeout(function () {
-          try { localStorage.setItem(TOKEN_KEY, token()); } catch (e) {}
-          loadPosts();
-        }, 500);
+      function renderAuthors(authors, meId) {
+        if (!authors.length) { $('authors-wrap').innerHTML = '<p class="hint">No users yet.</p>'; return; }
+        var rows = authors.map(function (a) {
+          var isMe = a.id === meId;
+          var actions;
+          if (isMe) {
+            actions = '<span class="hint">you</span>';
+          } else if (a.role === 'reader') {
+            actions = '<button type="button" class="btn btn-secondary btn-sm" data-uid="' + esc(a.id) + '" data-role="author">Approve as author</button>';
+          } else if (a.role === 'author') {
+            actions = '<button type="button" class="btn btn-secondary btn-sm" data-uid="' + esc(a.id) + '" data-role="admin">Make admin</button>' +
+                      '<button type="button" class="btn btn-secondary btn-sm" data-uid="' + esc(a.id) + '" data-role="reader">Revoke</button>';
+          } else {
+            actions = '<button type="button" class="btn btn-secondary btn-sm" data-uid="' + esc(a.id) + '" data-role="author">Make author</button>';
+          }
+          return '<tr>' +
+            '<td>' + esc(a.display_name || '—') + '<span class="slug">' + esc(a.email || '') + '</span></td>' +
+            '<td><span class="badge badge--role">' + esc(a.role) + '</span></td>' +
+            '<td><div class="row-actions">' + actions + '</div></td>' +
+          '</tr>';
+        }).join('');
+        $('authors-wrap').innerHTML =
+          '<table class="posts-table"><thead><tr><th>User</th><th>Role</th><th>Actions</th></tr></thead><tbody>' + rows + '</tbody></table>';
+      }
+
+      $('authors-wrap').addEventListener('click', async function (e) {
+        var b = e.target.closest('button[data-uid]'); if (!b) return;
+        var uid = b.getAttribute('data-uid'), newRole = b.getAttribute('data-role');
+        b.disabled = true;
+        try {
+          var res = await af('/api/admin/set-role', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: uid, role: newRole }) });
+          var data = {}; try { data = await res.json(); } catch (e2) {}
+          if (!res.ok) { $('authors-status').textContent = data.error || 'Update failed.'; b.disabled = false; return; }
+          loadAuthors();
+        } catch (err) { $('authors-status').textContent = 'Network error.'; b.disabled = false; }
       });
-      if (token()) loadPosts();
+      $('refresh-authors-btn').addEventListener('click', loadAuthors);
+
+      boot();
     })();
   </script>
 </body>

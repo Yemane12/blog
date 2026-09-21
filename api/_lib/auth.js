@@ -1,4 +1,5 @@
-/** Shared helpers for the token-gated admin API. */
+/** Shared helpers for the authenticated API (Supabase Auth JWT + RLS). */
+import { getUserSupabase } from './supabase.js';
 
 /** Parse a JSON body whether Vercel gave us an object or a raw string. */
 export function parseBody(req) {
@@ -13,20 +14,48 @@ export function parseBody(req) {
   return body || {};
 }
 
-/**
- * Extract the admin token from (in order): Authorization: Bearer <t>,
- * x-admin-token header, or a `token` field in the body.
- */
-export function getAdminToken(req, body) {
+/** Extract the Bearer access token (Supabase session JWT) from the request. */
+export function getBearerToken(req) {
   const auth = (req.headers['authorization'] || '').toString();
-  const bearer = auth.startsWith('Bearer ') ? auth.slice(7) : '';
-  return (req.headers['x-admin-token'] || bearer || (body && body.token) || '').toString().trim();
+  return auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
 }
 
-/** Map a Supabase RPC error to an HTTP response (401 for the token gate). */
-export function sendRpcError(res, error) {
-  if (error.code === '42501' || /unauthorized/i.test(error.message || '')) {
-    return res.status(401).json({ error: 'Invalid admin token.' });
+/**
+ * Resolve the signed-in user from the request's Bearer token.
+ * Returns { client, user, jwt } (a Supabase client scoped to that user so RLS
+ * applies), or null when there is no valid session.
+ */
+export async function getRequestUser(req) {
+  const jwt = getBearerToken(req);
+  if (!jwt) return null;
+  try {
+    const client = getUserSupabase(jwt);
+    const { data, error } = await client.auth.getUser(jwt);
+    if (error || !data?.user) return null;
+    return { client, user: data.user, jwt };
+  } catch {
+    return null;
+  }
+}
+
+/** Fetch the signed-in user's profile row (role, display name, bio). */
+export async function getProfile(ctx) {
+  const { data } = await ctx.client
+    .from('profiles')
+    .select('id,email,display_name,bio,role')
+    .eq('id', ctx.user.id)
+    .maybeSingle();
+  return data || { id: ctx.user.id, email: ctx.user.email, role: 'reader' };
+}
+
+/** Map a Postgres/PostgREST error to a sensible HTTP response. */
+export function sendDbError(res, error) {
+  // 42501 = RLS/insufficient privilege; PGRST codes for RLS violations too.
+  if (error.code === '42501' || /row-level security|permission denied/i.test(error.message || '')) {
+    return res.status(403).json({ error: 'You are not allowed to do that. Author approval may be required.' });
+  }
+  if (error.code === '23505') {
+    return res.status(409).json({ error: 'That slug is already in use.' });
   }
   return res.status(400).json({ error: error.message || 'Request failed.' });
 }

@@ -347,6 +347,18 @@
   // ACTIVE NAV HIGHLIGHTING
   // ============================================================
 
+  function initAccountNav() {
+    const nav = $('.header__nav');
+    if (!nav) return;
+    // Skip pages that already expose an auth entry point (login/dashboard).
+    if (nav.querySelector('a[href="/login.html"], a[href="/admin.html"]')) return;
+    const link = document.createElement('a');
+    link.href = '/login.html';
+    link.className = 'header__nav-link';
+    link.textContent = 'Sign in';
+    nav.appendChild(link);
+  }
+
   function initActiveNav() {
     const currentPath = window.location.pathname;
     const navLinks = $$('.header__nav-link');
@@ -426,6 +438,7 @@
     initLazyImages();
     initScrollReveal();
     initActiveNav();
+    initAccountNav();
     initReadingProgress();
     initThemeToggle();
     initHomepageList();

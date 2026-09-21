@@ -31,32 +31,36 @@ Browser ──> Static HTML/CSS/JS (index, archive, tags, about, ...)
 - `supabase/seed.sql` is generated from the article HTML in `articles/` by
   `node scripts/generate-seed.mjs` and loaded into the `posts` table.
 
-### Publishing new posts
+### Accounts, authors, and publishing
 
-Two ways to add a post to the database:
+Authentication uses **Supabase Auth** (email + password). Roles live in the `profiles`
+table: `reader` (default), `author`, `admin`.
 
-1. **Admin page (easiest):** visit `/admin.html`, paste your **admin token**, write the
-   essay in plain text (blank lines = paragraphs; `## Heading`, `> quote`, `- list`,
-   `**bold**`, `[link](https://…)`), and click **Publish**. The post appears immediately
-   on the homepage, archive, and at `/articles/<slug>`. The token is stored only in your
-   browser. The same page also **lists every post** (including drafts) with **Edit**,
-   **Publish/Unpublish**, and **Delete** controls.
+- **Sign in / sign up:** `/login.html` (also a **Sign in** link in the nav).
+- **New users** start as `reader` and can only read. An **admin** approves them as an
+  `author` before they can publish.
+- **Dashboard:** `/admin.html`
+  - Authors write/edit/delete **their own** posts (plain text or light markdown:
+    `## Heading`, `> quote`, `- list`, `**bold**`, `[link](https://…)`).
+  - Admins also see an **Authors** panel to approve/promote users, and can manage every post.
+- The owner email (`michaeltekie92@gmail.com`) is bootstrapped as `admin` on first sign-up.
+  Change or add admins with SQL:
+  ```sql
+  update public.profiles set role = 'admin' where email = 'someone@example.com';
+  ```
 
-2. **API** (all token-gated; send `Authorization: Bearer <token>` or an `x-admin-token` header):
-   - `POST /api/publish` — create/update `{ title, body | content, dek, tags, is_published, … }`
-   - `GET  /api/admin/list` — all posts, including drafts
-   - `GET  /api/admin/get?slug=…` — one full post (for editing)
-   - `POST /api/admin/set-published` — `{ slug, is_published }`
-   - `POST /api/admin/delete` — `{ slug }`
+**Row Level Security** enforces everything: published posts are world-readable; only approved
+authors can insert; authors can update/delete only their own posts; admins can manage all.
 
-Publishing is gated by the `publish_post()` Postgres function, which verifies the admin
-token against a value in the private `private.settings` table before writing — so even the
-public anon key cannot create posts without it. Set / rotate the token with:
-
-```sql
-insert into private.settings (key, value) values ('admin_token', '<new-secret>')
-on conflict (key) do update set value = excluded.value;
-```
+**API** (all require a Supabase session — send `Authorization: Bearer <access_token>`):
+- `GET  /api/me` — current user + role
+- `POST /api/publish` — create/update one of your posts
+- `GET  /api/admin/list` — your posts (or all, for admins)
+- `GET  /api/admin/get?slug=…` — one full post (for editing)
+- `POST /api/admin/set-published` — `{ slug, is_published }`
+- `POST /api/admin/delete` — `{ slug }`
+- `GET  /api/admin/authors` — list users (admin only)
+- `POST /api/admin/set-role` — `{ id, role }` (admin only)
 
 ### Environment variables (set in Vercel Project Settings → Environment Variables)
 
