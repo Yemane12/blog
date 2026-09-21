@@ -1,0 +1,16 @@
+{
+  "name": "public-blog",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A personal blog with a Supabase Postgres backend, deployed on Vercel.",
+  "scripts": {
+    "seed": "node scripts/generate-seed.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4"
+  }
+}

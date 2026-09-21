@@ -1,6 +1,77 @@
 # Public Blog
 
-A personal blog built with static HTML/CSS/JS — zero build step, zero framework, zero dependencies.
+A personal blog with a **Supabase (Postgres) backend**, served as static HTML/CSS/JS
+with a small set of **Vercel serverless functions**, and deployed on **Vercel**.
+
+Posts and newsletter subscribers live in Supabase. The homepage and archive load
+the post list from the database, article pages are server-rendered from the database
+(so they work without JavaScript and are crawlable), and the newsletter form writes
+real subscribers to the database.
+
+## Architecture
+
+```
+Browser ──> Static HTML/CSS/JS (index, archive, tags, about, ...)
+        └─> /api/posts            (list published posts)      ─┐
+        └─> /api/post?slug=…       (single post JSON)           ├─> Supabase Postgres
+        └─> /articles/:slug        (server-rendered article)   │   (posts, subscribers)
+        └─> /api/subscribe (POST)  (newsletter signup)         ─┘
+```
+
+- **Database:** Supabase project `blog`. Tables `posts` and `subscribers`, both with
+  Row Level Security. Anyone may read published posts and insert a subscriber; the
+  subscriber list is not publicly readable.
+- **API:** Node serverless functions in `/api`, using `@supabase/supabase-js` with the
+  anon key (safe under RLS). Configured via env vars `SUPABASE_URL` and `SUPABASE_ANON_KEY`.
+- **Routing:** `vercel.json` rewrites `/articles/:slug` to the server-rendering function.
+
+### Database setup / re-seeding
+
+- Schema lives in `supabase/migrations/`.
+- `supabase/seed.sql` is generated from the article HTML in `articles/` by
+  `node scripts/generate-seed.mjs` and loaded into the `posts` table.
+
+### Publishing new posts
+
+Two ways to add a post to the database:
+
+1. **Admin page (easiest):** visit `/admin.html`, paste your **admin token**, write the
+   essay in plain text (blank lines = paragraphs; `## Heading`, `> quote`, `- list`,
+   `**bold**`, `[link](https://…)`), and click **Publish**. The post appears immediately
+   on the homepage, archive, and at `/articles/<slug>`. The token is stored only in your
+   browser. The same page also **lists every post** (including drafts) with **Edit**,
+   **Publish/Unpublish**, and **Delete** controls.
+
+2. **API** (all token-gated; send `Authorization: Bearer <token>` or an `x-admin-token` header):
+   - `POST /api/publish` — create/update `{ title, body | content, dek, tags, is_published, … }`
+   - `GET  /api/admin/list` — all posts, including drafts
+   - `GET  /api/admin/get?slug=…` — one full post (for editing)
+   - `POST /api/admin/set-published` — `{ slug, is_published }`
+   - `POST /api/admin/delete` — `{ slug }`
+
+Publishing is gated by the `publish_post()` Postgres function, which verifies the admin
+token against a value in the private `private.settings` table before writing — so even the
+public anon key cannot create posts without it. Set / rotate the token with:
+
+```sql
+insert into private.settings (key, value) values ('admin_token', '<new-secret>')
+on conflict (key) do update set value = excluded.value;
+```
+
+### Environment variables (set in Vercel Project Settings → Environment Variables)
+
+```
+SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_ANON_KEY=<anon or publishable key>
+```
+
+See `.env.example`.
+
+---
+
+## Original static design
+
+Built with static HTML/CSS/JS — zero build step, zero framework, minimal dependencies.
 
 ## Design System
 

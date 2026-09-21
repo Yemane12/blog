@@ -71,11 +71,11 @@
         submitBtn.textContent = 'Subscribing...';
 
         try {
-          // Simulate API call - replace with actual endpoint
-          await simulateSubscribe(emailInput.value);
+          // Real API call to the Supabase-backed serverless function
+          const message = await subscribeEmail(emailInput.value);
 
           // Success
-          showSuccess('Thanks for subscribing! Check your inbox for a confirmation.');
+          showSuccess(message || 'Thanks for subscribing! Check your inbox for a confirmation.');
           form.reset();
           emailInput.setAttribute('aria-invalid', 'false');
 
@@ -121,19 +121,147 @@
     });
   }
 
-  // Simulate API call - REPLACE WITH REAL ENDPOINT
-  function simulateSubscribe(email) {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        // Simulate occasional failure for testing
-        if (Math.random() < 0.05) {
-          reject(new Error('Network error. Please try again.'));
-        } else {
-          console.log('[Newsletter] Subscribed:', email);
-          resolve();
-        }
-      }, 800);
+  // Real newsletter subscribe — posts to the Supabase-backed API.
+  async function subscribeEmail(email) {
+    const res = await fetch('/api/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, source: window.location.pathname }),
     });
+
+    let payload = {};
+    try {
+      payload = await res.json();
+    } catch (_) {
+      /* ignore non-JSON responses */
+    }
+
+    if (!res.ok) {
+      throw new Error(payload.error || 'Something went wrong. Please try again.');
+    }
+    return payload.message;
+  }
+
+  // ============================================================
+  // DYNAMIC POST LIST (HOMEPAGE + ARCHIVE) — from Supabase via /api/posts
+  // ============================================================
+
+  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  function formatShort(iso) {
+    const d = new Date(iso);
+    if (isNaN(d)) return '';
+    return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}`;
+  }
+
+  function formatLong(iso) {
+    const d = new Date(iso);
+    if (isNaN(d)) return '';
+    return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
+  }
+
+  function escapeHtml(s = '') {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  async function initHomepageList() {
+    const leadContainer = $('#dynamic-lead');
+    const listContainer = $('#dynamic-list');
+    if (!leadContainer && !listContainer) return;
+
+    let posts;
+    try {
+      const res = await fetch('/api/posts');
+      if (!res.ok) return; // Leave the static fallback markup in place.
+      const data = await res.json();
+      posts = data.posts;
+    } catch (_) {
+      return; // Offline / API unavailable — keep static content.
+    }
+    if (!Array.isArray(posts) || posts.length === 0) return;
+
+    const [lead, ...rest] = posts;
+
+    if (leadContainer && lead) {
+      leadContainer.innerHTML = `
+        <a href="/articles/${encodeURIComponent(lead.slug)}" class="article-teaser article-lead">
+          <div class="article-teaser__meta">
+            <time datetime="${escapeHtml(lead.published_at)}">${formatLong(lead.published_at)}</time>
+            <span aria-hidden="true">·</span>
+            <span>${Number(lead.read_minutes) || 5} min read</span>
+          </div>
+          <h2 class="article-teaser__headline">${escapeHtml(lead.title)}</h2>
+          <p class="article-lead__dek">${escapeHtml(lead.dek || '')}</p>
+          <p class="article-teaser__excerpt">${escapeHtml(lead.excerpt || '')}</p>
+        </a>`;
+    }
+
+    if (listContainer) {
+      const items = (leadContainer ? rest : posts)
+        .map(
+          (p) => `
+        <li>
+          <a href="/articles/${encodeURIComponent(p.slug)}" class="article-list__item">
+            <time class="article-list__meta" datetime="${escapeHtml(p.published_at)}">${formatShort(p.published_at)}</time>
+            <h3 class="article-list__headline">${escapeHtml(p.title)}</h3>
+          </a>
+        </li>`
+        )
+        .join('');
+      listContainer.innerHTML = items;
+    }
+  }
+
+  async function initArchiveList() {
+    const container = $('#dynamic-archive');
+    if (!container) return;
+
+    let posts;
+    try {
+      const res = await fetch('/api/posts?limit=100');
+      if (!res.ok) return; // Keep static fallback.
+      const data = await res.json();
+      posts = data.posts;
+    } catch (_) {
+      return;
+    }
+    if (!Array.isArray(posts) || posts.length === 0) return;
+
+    // Group by year, newest first.
+    const byYear = new Map();
+    for (const p of posts) {
+      const year = new Date(p.published_at).getUTCFullYear();
+      if (!byYear.has(year)) byYear.set(year, []);
+      byYear.get(year).push(p);
+    }
+    const years = [...byYear.keys()].sort((a, b) => b - a);
+
+    container.innerHTML = years
+      .map((year, i) => {
+        const rows = byYear
+          .get(year)
+          .map(
+            (p) => `
+          <li>
+            <a href="/articles/${encodeURIComponent(p.slug)}" class="article-list__item">
+              <time class="article-list__meta" datetime="${escapeHtml(p.published_at)}">${formatShort(p.published_at)}</time>
+              <h3 class="article-list__headline">${escapeHtml(p.title)}</h3>
+            </a>
+          </li>`
+          )
+          .join('');
+        return `
+      <section class="archive-year animate-fade-in-up delay-${Math.min(i + 1, 5)}" aria-labelledby="year-${year}">
+        <h2 id="year-${year}" class="archive__year-heading">${year}</h2>
+        <ul class="article-list" role="list">${rows}
+        </ul>
+      </section>`;
+      })
+      .join('\n');
   }
 
   // ============================================================
@@ -300,6 +428,8 @@
     initActiveNav();
     initReadingProgress();
     initThemeToggle();
+    initHomepageList();
+    initArchiveList();
 
     // Log initialization for debugging
     console.log('[Public Blog] Initialized — Swiss Modernism 2.0');
