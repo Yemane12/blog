@@ -72,6 +72,7 @@ export default async function handler(req, res) {
     tags,
     author_name: (body.author_name || fallbackName).toString(),
     author_bio: (body.author_bio || '').toString(),
+    cover_image: (body.cover_image || '').toString().trim() || null,
     published_at: publishedAt,
     is_published: body.is_published === false ? false : true,
     author_id: ctx.user.id,

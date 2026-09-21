@@ -36,4 +36,4 @@ export function getUserSupabase(jwt) {
 
 /** Columns exposed for post listings (no full content). */
 export const LIST_COLUMNS =
-  'slug,title,dek,excerpt,category,read_minutes,tags,published_at';
+  'slug,title,dek,excerpt,category,read_minutes,tags,published_at,cover_image';

@@ -58,9 +58,11 @@ function renderPage(post, origin) {
   <meta property="og:title" content="${title}">
   <meta property="og:description" content="${dek}">
   <meta property="og:url" content="${esc(url)}">
+  ${post.cover_image ? `<meta property="og:image" content="${esc(post.cover_image)}">` : ''}
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${title}">
   <meta name="twitter:description" content="${dek}">
+  ${post.cover_image ? `<meta name="twitter:image" content="${esc(post.cover_image)}">` : ''}
 </head>
 <body>
   <div id="reading-progress" aria-hidden="true"></div>
@@ -78,6 +80,7 @@ function renderPage(post, origin) {
 
   <main class="main" role="main">
     <article class="article">
+      ${post.cover_image ? `<img class="article__cover" src="${esc(post.cover_image)}" alt="">` : ''}
       <header class="article__header">
         <div class="article__meta">
           <span class="article__category">${esc(post.category || 'Essay')}</span>

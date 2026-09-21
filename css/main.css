@@ -1011,3 +1011,67 @@ hr {
     page-break-inside: avoid;
   }
 }
+/* ============================================================
+   COVER IMAGES & AD BOARD (added)
+   ============================================================ */
+.article__cover {
+  display: block;
+  width: 100%;
+  max-height: 460px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: var(--space-6, 2rem);
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+.article-lead__cover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+.article-list__thumb {
+  flex: 0 0 auto;
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+.article-list__body { min-width: 0; }
+
+/* Sponsor / advertisement board */
+.ad-board {
+  margin: var(--space-8, 3rem) 0;
+}
+.ad-board__label {
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  opacity: .55;
+  margin-bottom: .75rem;
+}
+.ad-board__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+.ad-card {
+  display: block;
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  border-radius: 12px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  background: color-mix(in srgb, currentColor 3%, transparent);
+  transition: transform .15s ease, border-color .15s ease;
+}
+.ad-card:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--color-accent, #EC4899) 45%, transparent); }
+.ad-card__img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+.ad-card__body { padding: .8rem .9rem 1rem; }
+.ad-card__title { font-weight: 600; font-size: .98rem; margin: 0 0 .25rem; }
+.ad-card__text { font-size: .85rem; opacity: .75; margin: 0; }

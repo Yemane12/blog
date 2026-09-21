@@ -189,6 +189,7 @@
     if (leadContainer && lead) {
       leadContainer.innerHTML = `
         <a href="/articles/${encodeURIComponent(lead.slug)}" class="article-teaser article-lead">
+          ${lead.cover_image ? `<img class="article-lead__cover" src="${escapeHtml(lead.cover_image)}" alt="" loading="lazy">` : ''}
           <div class="article-teaser__meta">
             <time datetime="${escapeHtml(lead.published_at)}">${formatLong(lead.published_at)}</time>
             <span aria-hidden="true">·</span>
@@ -206,14 +207,53 @@
           (p) => `
         <li>
           <a href="/articles/${encodeURIComponent(p.slug)}" class="article-list__item">
-            <time class="article-list__meta" datetime="${escapeHtml(p.published_at)}">${formatShort(p.published_at)}</time>
-            <h3 class="article-list__headline">${escapeHtml(p.title)}</h3>
+            ${p.cover_image ? `<img class="article-list__thumb" src="${escapeHtml(p.cover_image)}" alt="" loading="lazy">` : ''}
+            <div class="article-list__body">
+              <time class="article-list__meta" datetime="${escapeHtml(p.published_at)}">${formatShort(p.published_at)}</time>
+              <h3 class="article-list__headline">${escapeHtml(p.title)}</h3>
+            </div>
           </a>
         </li>`
         )
         .join('');
       listContainer.innerHTML = items;
     }
+  }
+
+  async function initAdBoard() {
+    const board = $('#ad-board');
+    const grid = $('#ad-board-grid');
+    if (!board || !grid) return;
+
+    let ads;
+    try {
+      const res = await fetch('/api/ads?placement=home');
+      if (!res.ok) return;
+      const data = await res.json();
+      ads = data.ads;
+    } catch (_) {
+      return;
+    }
+    if (!Array.isArray(ads) || ads.length === 0) return;
+
+    grid.innerHTML = ads
+      .map((ad) => {
+        const href = ad.link_url ? escapeHtml(ad.link_url) : '#';
+        const img = ad.image_url
+          ? `<img class="ad-card__img" src="${escapeHtml(ad.image_url)}" alt="" loading="lazy">`
+          : '';
+        const body = ad.body ? `<p class="ad-card__text">${escapeHtml(ad.body)}</p>` : '';
+        return `
+        <a class="ad-card" href="${href}" target="_blank" rel="noopener sponsored nofollow">
+          ${img}
+          <div class="ad-card__body">
+            <p class="ad-card__title">${escapeHtml(ad.title)}</p>
+            ${body}
+          </div>
+        </a>`;
+      })
+      .join('');
+    board.hidden = false;
   }
 
   async function initArchiveList() {
@@ -443,6 +483,7 @@
     initThemeToggle();
     initHomepageList();
     initArchiveList();
+    initAdBoard();
 
     // Log initialization for debugging
     console.log('[Public Blog] Initialized — Swiss Modernism 2.0');
