@@ -1,5 +1,6 @@
 import { getSupabase } from './_lib/supabase.js';
 import { toHtml, estimateReadMinutes, slugify } from './_lib/markdown.js';
+import { getAdminToken, parseBody } from './_lib/auth.js';
 
 /**
  * POST /api/publish
@@ -27,19 +28,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  let body = req.body;
-  if (typeof body === 'string') {
-    try {
-      body = JSON.parse(body);
-    } catch {
-      body = {};
-    }
-  }
-  body = body || {};
-
-  const auth = (req.headers['authorization'] || '').toString();
-  const bearer = auth.startsWith('Bearer ') ? auth.slice(7) : '';
-  const token = (req.headers['x-admin-token'] || bearer || body.token || '').toString().trim();
+  const body = parseBody(req);
+  const token = getAdminToken(req, body);
   if (!token) return res.status(401).json({ error: 'Missing admin token.' });
 
   const title = (body.title || '').toString().trim();

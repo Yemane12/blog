@@ -39,10 +39,15 @@ Two ways to add a post to the database:
    essay in plain text (blank lines = paragraphs; `## Heading`, `> quote`, `- list`,
    `**bold**`, `[link](https://…)`), and click **Publish**. The post appears immediately
    on the homepage, archive, and at `/articles/<slug>`. The token is stored only in your
-   browser.
+   browser. The same page also **lists every post** (including drafts) with **Edit**,
+   **Publish/Unpublish**, and **Delete** controls.
 
-2. **API:** `POST /api/publish` with the token in an `Authorization: Bearer <token>`
-   (or `x-admin-token`) header and a JSON body of `{ title, body | content, dek, tags, … }`.
+2. **API** (all token-gated; send `Authorization: Bearer <token>` or an `x-admin-token` header):
+   - `POST /api/publish` — create/update `{ title, body | content, dek, tags, is_published, … }`
+   - `GET  /api/admin/list` — all posts, including drafts
+   - `GET  /api/admin/get?slug=…` — one full post (for editing)
+   - `POST /api/admin/set-published` — `{ slug, is_published }`
+   - `POST /api/admin/delete` — `{ slug }`
 
 Publishing is gated by the `publish_post()` Postgres function, which verifies the admin
 token against a value in the private `private.settings` table before writing — so even the
