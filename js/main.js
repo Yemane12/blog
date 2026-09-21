@@ -168,6 +168,54 @@
       .replace(/"/g, '&quot;');
   }
 
+  // Small share row placed as a SIBLING of a card link (never nested inside
+  // the <a>, which would be invalid). Social links open in a new tab; the
+  // copy button copies the article URL.
+  const SHARE_ICONS = {
+    x: '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg>',
+    facebook: '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>',
+    linkedin: '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>',
+    link: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>',
+  };
+
+  function cardShareRow(post) {
+    const url = (window.location.origin || '') + '/articles/' + encodeURIComponent(post.slug);
+    const u = encodeURIComponent(url);
+    const t = encodeURIComponent(post.title || '');
+    return `
+          <div class="card-share" data-share-url="${escapeHtml(url)}">
+            <a class="card-share__btn" href="https://twitter.com/intent/tweet?text=${t}&url=${u}" target="_blank" rel="noopener" aria-label="Share on X">${SHARE_ICONS.x}</a>
+            <a class="card-share__btn" href="https://www.facebook.com/sharer/sharer.php?u=${u}" target="_blank" rel="noopener" aria-label="Share on Facebook">${SHARE_ICONS.facebook}</a>
+            <a class="card-share__btn" href="https://www.linkedin.com/sharing/share-offsite/?url=${u}" target="_blank" rel="noopener" aria-label="Share on LinkedIn">${SHARE_ICONS.linkedin}</a>
+            <button type="button" class="card-share__btn card-share__copy" aria-label="Copy link">${SHARE_ICONS.link}</button>
+          </div>`;
+  }
+
+  function initCardShare() {
+    document.addEventListener('click', async (e) => {
+      const copyBtn = e.target.closest && e.target.closest('.card-share__copy');
+      if (!copyBtn) return;
+      e.preventDefault();
+      const row = copyBtn.closest('.card-share');
+      const url = row && row.getAttribute('data-share-url');
+      if (!url) return;
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch (_) {
+        const tmp = document.createElement('input');
+        tmp.value = url; document.body.appendChild(tmp); tmp.select();
+        try { document.execCommand('copy'); } catch (_) {}
+        tmp.remove();
+      }
+      copyBtn.classList.add('is-copied');
+      copyBtn.setAttribute('aria-label', 'Link copied');
+      setTimeout(() => {
+        copyBtn.classList.remove('is-copied');
+        copyBtn.setAttribute('aria-label', 'Copy link');
+      }, 1400);
+    });
+  }
+
   async function initHomepageList() {
     const leadContainer = $('#dynamic-lead');
     const listContainer = $('#dynamic-list');
@@ -198,7 +246,8 @@
           <h2 class="article-teaser__headline">${escapeHtml(lead.title)}</h2>
           <p class="article-lead__dek">${escapeHtml(lead.dek || '')}</p>
           <p class="article-teaser__excerpt">${escapeHtml(lead.excerpt || '')}</p>
-        </a>`;
+        </a>
+        ${cardShareRow(lead)}`;
     }
 
     if (listContainer) {
@@ -213,6 +262,7 @@
               <h3 class="article-list__headline">${escapeHtml(p.title)}</h3>
             </div>
           </a>
+          ${cardShareRow(p)}
         </li>`
       );
 
@@ -658,6 +708,7 @@
     initReadingProgress();
     initThemeToggle();
     initBackToTop();
+    initCardShare();
     initArticleTOC();
     initHomepageList();
     initArchiveList();
