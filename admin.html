@@ -474,11 +474,14 @@ More text..."></textarea>
       async function loadAuthors() {
         $('authors-status').textContent = 'Loading…';
         try {
-          var res = await af('/api/admin/authors');
-          var data = {}; try { data = await res.json(); } catch (e) {}
-          if (!res.ok) { $('authors-status').textContent = data.error || 'Could not load authors.'; return; }
-          renderAuthors(data.authors || [], data.me);
-          $('authors-status').textContent = (data.authors || []).length + ' user(s).';
+          var res = await window.blogAuth.client.from('profiles')
+            .select('id,email,display_name,role,created_at')
+            .order('created_at', { ascending: true });
+          if (res.error) { $('authors-status').textContent = res.error.message; return; }
+          var session = await window.blogAuth.getSession();
+          var meId = session && session.user ? session.user.id : null;
+          renderAuthors(res.data || [], meId);
+          $('authors-status').textContent = (res.data || []).length + ' user(s).';
         } catch (err) { $('authors-status').textContent = 'Network error.'; }
       }
 
@@ -512,9 +515,8 @@ More text..."></textarea>
         var uid = b.getAttribute('data-uid'), newRole = b.getAttribute('data-role');
         b.disabled = true;
         try {
-          var res = await af('/api/admin/set-role', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: uid, role: newRole }) });
-          var data = {}; try { data = await res.json(); } catch (e2) {}
-          if (!res.ok) { $('authors-status').textContent = data.error || 'Update failed.'; b.disabled = false; return; }
+          var res = await window.blogAuth.client.from('profiles').update({ role: newRole }).eq('id', uid).select('id');
+          if (res.error) { $('authors-status').textContent = res.error.message; b.disabled = false; return; }
           loadAuthors();
         } catch (err) { $('authors-status').textContent = 'Network error.'; b.disabled = false; }
       });

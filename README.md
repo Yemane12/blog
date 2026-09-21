@@ -59,8 +59,11 @@ authors can insert; authors can update/delete only their own posts; admins can m
 - `GET  /api/admin/get?slug=…` — one full post (for editing)
 - `POST /api/admin/set-published` — `{ slug, is_published }`
 - `POST /api/admin/delete` — `{ slug }`
-- `GET  /api/admin/authors` — list users (admin only)
-- `POST /api/admin/set-role` — `{ id, role }` (admin only)
+- `GET  /api/ads?placement=home` — public list of active ads
+
+Author approvals and ad management are done client-side from the dashboard via
+`@supabase/supabase-js` (RLS enforces admin-only). This also keeps the project
+under the Vercel Hobby plan's 12-serverless-function limit.
 
 ### Environment variables (set in Vercel Project Settings → Environment Variables)
 
